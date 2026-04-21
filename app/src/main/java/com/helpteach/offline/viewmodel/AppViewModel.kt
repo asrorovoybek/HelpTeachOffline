@@ -22,7 +22,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val pendingTasks = db.taskDao().getPendingTasks().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     val completedTasks = db.taskDao().getCompletedTasks().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Loading)
+    private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Idle)
     val weatherState: StateFlow<WeatherState> = _weatherState
 
     init {
@@ -58,7 +58,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun addTask(task: Task) = viewModelScope.launch { db.taskDao().insertTask(task) }
     
     fun addTaskWithReminder(task: Task, time: String) = viewModelScope.launch {
-        val id = db.taskDao().insertTask(task) // Assuming insert returns Long? No, we didn't specify return Long. Let's just pass task and time to NotificationHelper
+        db.taskDao().insertTask(task)
         if (time.isNotBlank()) {
             NotificationHelper.scheduleTaskAlarm(getApplication(), task.title, time)
         }
@@ -78,13 +78,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val response = com.helpteach.offline.network.NativeWeatherFetcher.fetchWeatherSync(city)
                 _weatherState.value = WeatherState.Success(response)
             } catch (e: Throwable) {
-                _weatherState.value = WeatherState.Error(e.message ?: "Noma'lum xatolik yuz berdi")
+                _weatherState.value = WeatherState.Error(e.message ?: "Noma'lum xatolik")
             }
         }
     }
 }
 
 sealed class WeatherState {
+    object Idle : WeatherState()
     object Loading : WeatherState()
     data class Success(val data: WeatherResponse) : WeatherState()
     data class Error(val message: String) : WeatherState()
