@@ -58,6 +58,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // --- Tasks ---
     fun addTask(task: Task) = viewModelScope.launch { db.taskDao().insertTask(task) }
     
+    fun addTaskWithReminder(task: Task, time: String) = viewModelScope.launch {
+        val id = db.taskDao().insertTask(task) // Assuming insert returns Long? No, we didn't specify return Long. Let's just pass task and time to NotificationHelper
+        if (time.isNotBlank()) {
+            NotificationHelper.scheduleTaskAlarm(getApplication(), task.title, time)
+        }
+    }
+    
     fun toggleTaskComplete(task: Task) = viewModelScope.launch {
         db.taskDao().insertTask(task.copy(isDone = !task.isDone))
     }
@@ -74,8 +81,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     city = city
                 )
                 _weatherState.value = WeatherState.Success(response)
-            } catch (e: Exception) {
-                _weatherState.value = WeatherState.Error(e.message ?: "Noma'lum xatolik")
+            } catch (e: Throwable) {
+                _weatherState.value = WeatherState.Error(e.stackTraceToString())
             }
         }
     }

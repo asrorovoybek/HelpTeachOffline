@@ -143,12 +143,23 @@ fun AddLessonDialog(dayOfWeek: Int, onDismiss: () -> Unit, onSave: (Lesson) -> U
                     OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("Boshlanish (HH:mm)") }, modifier = Modifier.weight(1f))
                     OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("Tugash (HH:mm)") }, modifier = Modifier.weight(1f))
                 }
-                // Simulating simple dropdowns via Buttons for now
-                Text("Hafta turi: ${if(weekType=="every") "Har hafta" else if(weekType=="odd") "Toq" else "Juft"}")
-                Row {
-                    Button(onClick = { weekType = "every" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Har") }
-                    Button(onClick = { weekType = "odd" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Toq") }
-                    Button(onClick = { weekType = "even" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Juft") }
+                Text("Dars turi: ${when(lessonType) { "lecture" -> "Ma'ruza"; "practical" -> "Amaliyot"; "lab" -> "Laboratoriya"; "course" -> "Kurs ishi"; "seminar" -> "Seminar"; else -> "Boshqa" }}", fontWeight = FontWeight.Bold)
+                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val types = listOf("lecture" to "Ma'ruza", "practical" to "Amaliyot", "lab" to "Lab", "seminar" to "Seminar")
+                    items(types) { (key, label) ->
+                        FilterChip(
+                            selected = lessonType == key,
+                            onClick = { lessonType = key },
+                            label = { Text(label) }
+                        )
+                    }
+                }
+
+                Text("Hafta turi: ${if(weekType=="every") "Har hafta" else if(weekType=="odd") "Toq" else "Juft"}", fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FilterChip(selected = weekType == "every", onClick = { weekType = "every" }, label = { Text("Har") })
+                    FilterChip(selected = weekType == "odd", onClick = { weekType = "odd" }, label = { Text("Toq") })
+                    FilterChip(selected = weekType == "even", onClick = { weekType = "even" }, label = { Text("Juft") })
                 }
             }
         },

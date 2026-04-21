@@ -1,11 +1,22 @@
 package com.helpteach.offline.ui
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.helpteach.offline.data.Profile
 import com.helpteach.offline.data.Settings
@@ -16,6 +27,7 @@ import com.helpteach.offline.viewmodel.AppViewModel
 fun ProfileScreen(viewModel: AppViewModel) {
     val profile by viewModel.profile.collectAsState()
     val settings by viewModel.settings.collectAsState()
+    val context = LocalContext.current
 
     var isEditingProfile by remember { mutableStateOf(false) }
     var isEditingSettings by remember { mutableStateOf(false) }
@@ -23,7 +35,7 @@ fun ProfileScreen(viewModel: AppViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profil va Sozlamalar") },
+                title = { Text("Mening Profilim ✨") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -37,61 +49,105 @@ fun ProfileScreen(viewModel: AppViewModel) {
                 .padding(padding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Profile Card
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Profil", style = MaterialTheme.typography.titleLarge)
-                        TextButton(onClick = { isEditingProfile = true }) { Text("Tahrirlash") }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("👤 Shaxsiy Ma'lumotlar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        TextButton(onClick = { isEditingProfile = true }) { Text("Tahrirlash ✏️") }
                     }
-                    Divider()
+                    Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                     if (profile == null) {
-                        Text("Profil to'ldirilmagan. Iltimos, tahrirlang.")
+                        Text("Profil to'ldirilmagan. Iltimos, ma'lumotlarni kiriting! 🚀", color = MaterialTheme.colorScheme.error)
                     } else {
                         val p = profile!!
-                        Text("Ism: ${p.fullName}", style = MaterialTheme.typography.bodyLarge)
-                        Text("Rol: ${if (p.role == "teacher") "O'qituvchi" else if (p.role == "student") "Talaba" else "Boshqa"}", style = MaterialTheme.typography.bodyLarge)
-                        Text("Muassasa: ${p.organization}", style = MaterialTheme.typography.bodyLarge)
+                        ProfileRow("Ism-sharif", p.fullName)
+                        ProfileRow("Daraja", if (p.role == "teacher") "O'qituvchi 👨‍🏫" else if (p.role == "student") "Talaba 🎓" else "Boshqa 👤")
+                        ProfileRow("Muassasa", p.organization)
                     }
                 }
             }
 
             // Settings Card
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Sozlamalar", style = MaterialTheme.typography.titleLarge)
-                        TextButton(onClick = { isEditingSettings = true }) { Text("Tahrirlash") }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("⚙️ Sozlamalar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        TextButton(onClick = { isEditingSettings = true }) { Text("O'zgartirish 🛠") }
                     }
-                    Divider()
+                    Divider(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))
                     if (settings == null) {
-                        Text("Standart sozlamalar o'rnatilmoqda...")
+                        Text("Standart sozlamalar o'rnatilmoqda... ⏳")
                     } else {
                         val s = settings!!
-                        Text("Ertalabki xabar: ${s.morningTime}")
-                        Text("Kechki xulosa: ${s.eveningTime}")
-                        Text("Ob-havo shahri: ${s.weatherCity}")
-                        Text("Darsdan 30 daqiqa oldin eslatma: ${if (s.notifyBefore30) "Yoqilgan" else "O'chirilgan"}")
-                        Text("Darsdan 10 daqiqa oldin eslatma: ${if (s.notifyBefore10) "Yoqilgan" else "O'chirilgan"}")
-                        Text("Dars boshlanganda eslatma: ${if (s.notifyOnTime) "Yoqilgan" else "O'chirilgan"}")
-                        Text("Bezovta qilma rejimi: ${if (s.doNotDisturb) "Yoqilgan" else "O'chirilgan"}")
+                        ProfileRow("🌅 Ertalabki xabar", s.morningTime)
+                        ProfileRow("🌙 Kechki xulosa", s.eveningTime)
+                        ProfileRow("🏙 Ob-havo shahri", s.weatherCity)
+                        ProfileRow("⏰ 30 daqiqa oldin", if (s.notifyBefore30) "Yoqilgan ✅" else "O'chirilgan ❌")
+                        ProfileRow("⚡️ 10 daqiqa oldin", if (s.notifyBefore10) "Yoqilgan ✅" else "O'chirilgan ❌")
+                        ProfileRow("🔴 Dars vaqtida", if (s.notifyOnTime) "Yoqilgan ✅" else "O'chirilgan ❌")
+                        ProfileRow("🔕 Bezovta qilma", if (s.doNotDisturb) "Faol 🔕" else "O'chirilgan 🔔")
                     }
                 }
             }
 
             // About App Card
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Dastur haqida", style = MaterialTheme.typography.titleLarge)
-                    Divider()
-                    Text("Muallif: Asrorov Oybek", style = MaterialTheme.typography.bodyLarge)
-                    Text("Telefon: +998918109596", style = MaterialTheme.typography.bodyLarge)
-                    Text("E-mail: AsrorovOybek@gmail.com", style = MaterialTheme.typography.bodyLarge)
-                    Text("Telegram: https://t.me/Asrorov_Oybek", style = MaterialTheme.typography.bodyLarge)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("ℹ️ Dastur Haqida", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                    Divider(color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f))
+                    
+                    ProfileRow("Muallif", "Asrorov Oybek 👨‍💻")
+                    
+                    ContactRow(
+                        icon = Icons.Filled.Phone,
+                        title = "Telefon",
+                        value = "+998 91 810 95 96",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+998918109596"))
+                            context.startActivity(intent)
+                        }
+                    )
+                    
+                    ContactRow(
+                        icon = Icons.Filled.Email,
+                        title = "E-mail",
+                        value = "AsrorovOybek@gmail.com",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:AsrorovOybek@gmail.com"))
+                            context.startActivity(intent)
+                        }
+                    )
+                    
+                    ContactRow(
+                        icon = Icons.Filled.Send,
+                        title = "Telegram",
+                        value = "@Asrorov_Oybek",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/Asrorov_Oybek"))
+                            context.startActivity(intent)
+                        }
+                    )
                 }
             }
+            Spacer(modifier = Modifier.height(30.dp))
         }
     }
 
@@ -116,6 +172,32 @@ fun ProfileScreen(viewModel: AppViewModel) {
                 isEditingSettings = false
             }
         )
+    }
+}
+
+@Composable
+fun ProfileRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun ContactRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, value: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 

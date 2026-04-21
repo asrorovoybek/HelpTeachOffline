@@ -162,6 +162,36 @@ object NotificationHelper {
         }
     }
 
+    fun scheduleTaskAlarm(context: Context, title: String, timeHHmm: String) {
+        val parts = timeHHmm.split(":")
+        if (parts.size != 2) return
+        val hour = parts[0].toIntOrNull() ?: return
+        val min = parts[1].toIntOrNull() ?: return
+
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, min)
+            set(Calendar.SECOND, 0)
+            if (before(Calendar.getInstance())) {
+                add(Calendar.DAY_OF_YEAR, 1) // default to tomorrow if time passed
+            }
+        }
+
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = "ACTION_CUSTOM_REMINDER"
+            putExtra("id", title.hashCode())
+            putExtra("title", "🔔 Vazifa eslatmasi!")
+            putExtra("message", title)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, title.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        try {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+        } catch (e: SecurityException) { }
+    }
+
     fun scheduleLessonAlarmsForToday(context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(context)

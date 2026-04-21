@@ -7,9 +7,9 @@ import retrofit2.http.Query
 
 // WeatherAPI Models
 data class WeatherResponse(
-    val location: LocationData,
-    val current: CurrentData,
-    val forecast: ForecastData
+    val location: LocationData?,
+    val current: CurrentData?,
+    val forecast: ForecastData?
 )
 
 data class LocationData(

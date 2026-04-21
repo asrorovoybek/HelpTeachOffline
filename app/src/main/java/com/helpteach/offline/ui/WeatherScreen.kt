@@ -57,53 +57,57 @@ fun WeatherScreen(viewModel: AppViewModel) {
                 is WeatherState.Success -> {
                     val current = state.data.current
                     val location = state.data.location
-                    val today = state.data.forecast.forecastday.firstOrNull()?.day
+                    val today = state.data.forecast?.forecastday?.firstOrNull()?.day
                     
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = location.name,
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(text = location.localtime)
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Text(
-                            text = "${current.temp_c}°C",
-                            style = MaterialTheme.typography.displayLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(text = current.condition.text, style = MaterialTheme.typography.titleLarge)
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Tafsilotlar", style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("His qilinadi: ${current.feelslike_c}°C")
-                                Text("Shamol: ${current.wind_kph} km/soat")
-                                Text("Namlik: ${current.humidity}%")
-                                if (today != null) {
+                    if (current == null || location == null) {
+                        Text("Ma'lumot topilmadi. API kalit noto'g'ri bo'lishi mumkin.")
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = location.name ?: "Noma'lum",
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(text = location.localtime ?: "")
+                            Spacer(modifier = Modifier.height(24.dp))
+                            
+                            Text(
+                                text = "${current.temp_c}°C",
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(text = current.condition?.text ?: "", style = MaterialTheme.typography.titleLarge)
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("Tafsilotlar", style = MaterialTheme.typography.titleMedium)
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Bugun: ${today.mintemp_c}°C dan ${today.maxtemp_c}°C gacha")
-                                    Text("Yomg'ir ehtimoli: ${today.daily_chance_of_rain}%")
+                                    Text("His qilinadi: ${current.feelslike_c}°C")
+                                    Text("Shamol: ${current.wind_kph} km/soat")
+                                    Text("Namlik: ${current.humidity}%")
+                                    if (today != null) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Bugun: ${today.mintemp_c}°C dan ${today.maxtemp_c}°C gacha")
+                                        Text("Yomg'ir ehtimoli: ${today.daily_chance_of_rain}%")
+                                    }
                                 }
                             }
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                "Bu ma'lumotlar WeatherAPI orqali olinmoqda va faqatgina shu oynada internet sarflanadi.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text(
-                            "Bu ma'lumotlar WeatherAPI orqali olinmoqda va faqatgina shu oynada internet sarflanadi.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }

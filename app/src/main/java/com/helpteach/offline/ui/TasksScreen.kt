@@ -86,8 +86,8 @@ fun TasksScreen(viewModel: AppViewModel) {
     if (showAddDialog) {
         AddTaskDialog(
             onDismiss = { showAddDialog = false },
-            onSave = { task ->
-                viewModel.addTask(task)
+            onSave = { task, remindTime ->
+                viewModel.addTaskWithReminder(task, remindTime)
                 showAddDialog = false
             }
         )
@@ -116,10 +116,11 @@ fun TaskCardWithDelete(task: Task, onToggle: () -> Unit, onDelete: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task) -> Unit) {
+fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task, String) -> Unit) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
+    var remindTime by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -128,14 +129,16 @@ fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task) -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Vazifa nomi") })
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Izoh (ixtiyoriy)") })
-                OutlinedTextField(value = dueDate, onValueChange = { dueDate = it }, label = { Text("Muddat (YYYY-MM-DD)") })
+                OutlinedTextField(value = dueDate, onValueChange = { dueDate = it }, label = { Text("Sana (YYYY-MM-DD) ixtiyoriy") })
+                OutlinedTextField(value = remindTime, onValueChange = { remindTime = it }, label = { Text("Bong urish vaqti (HH:mm) ixtiyoriy") })
+                Text("Agar vaqt kiritsangiz, shu soatda signal chalib eslatadi 🔔", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     if (title.isNotBlank()) {
-                        onSave(Task(title = title, description = description.takeIf { it.isNotBlank() }, dueDate = dueDate.takeIf { it.isNotBlank() }))
+                        onSave(Task(title = title, description = description.takeIf { it.isNotBlank() }, dueDate = dueDate.takeIf { it.isNotBlank() }), remindTime)
                     }
                 }
             ) {
