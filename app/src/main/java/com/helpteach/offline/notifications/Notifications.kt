@@ -184,15 +184,15 @@ object NotificationHelper {
                 val min = parts[1].toIntOrNull() ?: continue
 
                 // 30 mins before
-                if (settings.notifyBefore30) {
+                if (settings?.notifyBefore30 == true) {
                     setAlarm(context, lesson, hour, min, -30, "📅 30 daqiqadan dars boshlanadi!")
                 }
                 // 10 mins before
-                if (settings.notifyBefore10) {
+                if (settings?.notifyBefore10 == true) {
                     setAlarm(context, lesson, hour, min, -10, "⚡️ 10 daqiqa qoldi!")
                 }
                 // On time
-                if (settings.notifyOnTime) {
+                if (settings?.notifyOnTime == true) {
                     setAlarm(context, lesson, hour, min, 0, "🔴 DARS BOSHLANDI!")
                 }
             }

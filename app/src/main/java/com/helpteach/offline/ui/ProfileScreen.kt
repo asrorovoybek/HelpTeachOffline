@@ -80,6 +80,18 @@ fun ProfileScreen(viewModel: AppViewModel) {
                     }
                 }
             }
+
+            // About App Card
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Dastur haqida", style = MaterialTheme.typography.titleLarge)
+                    Divider()
+                    Text("Muallif: Asrorov Oybek", style = MaterialTheme.typography.bodyLarge)
+                    Text("Telefon: +998918109596", style = MaterialTheme.typography.bodyLarge)
+                    Text("E-mail: AsrorovOybek@gmail.com", style = MaterialTheme.typography.bodyLarge)
+                    Text("Telegram: https://t.me/Asrorov_Oybek", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
         }
     }
 
