@@ -1,0 +1,33 @@
+name: Android CI (APK Yaratish)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Kodni yuklab olish
+      uses: actions/checkout@v4
+
+    - name: Java 17 ni o'rnatish
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Gradle Wrapper yaratish
+      run: gradle wrapper --gradle-version 8.4
+
+    - name: APK ni qurish (assembleDebug)
+      run: ./gradlew assembleDebug
+
+    - name: Tayyor APK faylini saqlash
+      uses: actions/upload-artifact@v4
+      with:
+        name: HelpTeach-Offline-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
