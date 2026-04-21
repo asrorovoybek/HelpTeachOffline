@@ -34,7 +34,7 @@ data class Settings(
     val notifyBefore10: Boolean = true,
     val notifyOnTime: Boolean = true,
     val doNotDisturb: Boolean = false,
-    val weatherCity: String = "Toshkent"
+    val weatherCity: String = "Qarshi"
 )
 
 @Entity(tableName = "lessons")

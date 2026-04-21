@@ -16,16 +16,13 @@ import com.helpteach.offline.data.Lesson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-import android.speech.tts.TextToSpeech
-import java.util.Locale
-import kotlinx.coroutines.delay
+import android.media.MediaPlayer
 
 class AlarmReceiver : BroadcastReceiver() {
-    private var tts: TextToSpeech? = null
-
     override fun onReceive(context: Context, intent: Intent) {
         val pendingResult = goAsync()
         val action = intent.action
@@ -33,14 +30,16 @@ class AlarmReceiver : BroadcastReceiver() {
         val title = intent.getStringExtra("title") ?: "Eslatma"
         val message = intent.getStringExtra("message") ?: ""
 
-        val textToSpeak = when (action) {
-            "ACTION_LESSON_REMINDER" -> "Hurmatli foydalanuvchi, sizning dars mashg'ulotingiz bor."
-            "ACTION_CUSTOM_REMINDER" -> "Sizda bajarilmagan vazifalar bor. Iltimos e'tibor bering."
-            "ACTION_MORNING_SUMMARY" -> "Xayrli tong! Bugungi darslar ro'yxatini va vazifalarni ko'rib chiqing."
-            "ACTION_EVENING_SUMMARY" -> "Kechki xulosa. Bajarilgan vazifalarni tekshiring."
-            else -> ""
+        // Ovozli fayl tanlash
+        val audioResId = when (action) {
+            "ACTION_LESSON_REMINDER" -> com.helpteach.offline.R.raw.lesson_reminder
+            "ACTION_CUSTOM_REMINDER" -> com.helpteach.offline.R.raw.task_reminder
+            "ACTION_MORNING_SUMMARY" -> com.helpteach.offline.R.raw.morning_summary
+            "ACTION_EVENING_SUMMARY" -> com.helpteach.offline.R.raw.evening_summary
+            else -> null
         }
 
+        // Bildirishnoma ko'rsatish
         when (action) {
             "ACTION_LESSON_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
             "ACTION_MORNING_SUMMARY" -> handleMorningSummary(context)
@@ -48,27 +47,25 @@ class AlarmReceiver : BroadcastReceiver() {
             "ACTION_CUSTOM_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
         }
 
-        if (textToSpeak.isNotEmpty()) {
+        // Ovozli xabarni chalish
+        if (audioResId != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 // Bildirishnoma ovozi tugashini kutamiz
                 delay(2500)
-                
-                tts = TextToSpeech(context.applicationContext) { status ->
-                    if (status == TextToSpeech.SUCCESS) {
-                        val result = tts?.setLanguage(Locale("uz", "UZ"))
-                        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                            tts?.setLanguage(Locale.getDefault())
-                        }
-                        tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "AlarmTTS")
-                        
-                        CoroutineScope(Dispatchers.IO).launch {
-                            delay(8000)
-                            tts?.shutdown()
+
+                try {
+                    val mediaPlayer = MediaPlayer.create(context.applicationContext, audioResId)
+                    if (mediaPlayer != null) {
+                        mediaPlayer.setOnCompletionListener { mp ->
+                            mp.release()
                             pendingResult.finish()
                         }
+                        mediaPlayer.start()
                     } else {
                         pendingResult.finish()
                     }
+                } catch (e: Exception) {
+                    pendingResult.finish()
                 }
             }
         } else {

@@ -20,7 +20,7 @@ import com.helpteach.offline.viewmodel.AppViewModel
 @Composable
 fun WeatherScreen(viewModel: AppViewModel) {
     val settings by viewModel.settings.collectAsState()
-    val city = settings?.weatherCity ?: "Toshkent"
+    val city = settings?.weatherCity ?: "Qarshi"
     val context = LocalContext.current
 
     Scaffold { padding ->
