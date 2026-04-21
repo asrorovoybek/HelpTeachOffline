@@ -54,49 +54,64 @@ fun WeatherScreen(viewModel: AppViewModel) {
                     } else {
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth()
                                 .verticalScroll(rememberScrollState()),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = location.name ?: "Noma'lum",
-                                style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(text = location.localtime ?: "")
-                            Spacer(modifier = Modifier.height(24.dp))
-                            
-                            Text(
-                                text = "${current.temp_c}°C",
-                                style = MaterialTheme.typography.displayLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(text = current.condition?.text ?: "", style = MaterialTheme.typography.titleLarge)
-                            
-                            Spacer(modifier = Modifier.height(24.dp))
-                            
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Tafsilotlar", style = MaterialTheme.typography.titleMedium)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("His qilinadi: ${current.feelslike_c}°C")
-                                    Text("Shamol: ${current.wind_kph} km/soat")
-                                    Text("Namlik: ${current.humidity}%")
-                                    if (today != null) {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text("Bugun: ${today.mintemp_c}°C dan ${today.maxtemp_c}°C gacha")
-                                        Text("Yomg'ir ehtimoli: ${today.daily_chance_of_rain}%")
-                                    }
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                shape = MaterialTheme.shapes.large
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = location.name ?: "Noma'lum",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = location.localtime ?: "",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "${current.temp_c}°C",
+                                        style = MaterialTheme.typography.displayMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = current.condition?.text ?: "", 
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
                             
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                "Bu ma'lumotlar WeatherAPI orqali olinmoqda va faqatgina shu oynada internet sarflanadi.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                                    Text("Tafsilotlar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                                    Text("His qilinadi: ${current.feelslike_c}°C", style = MaterialTheme.typography.bodyLarge)
+                                    Text("Shamol: ${current.wind_kph} km/soat", style = MaterialTheme.typography.bodyLarge)
+                                    Text("Namlik: ${current.humidity}%", style = MaterialTheme.typography.bodyLarge)
+                                    if (today != null) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Bugun: ${today.mintemp_c}°C dan ${today.maxtemp_c}°C gacha", style = MaterialTheme.typography.bodyLarge)
+                                        Text("Yomg'ir ehtimoli: ${today.daily_chance_of_rain}%", style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -49,23 +49,7 @@ object NativeWeatherFetcher {
     fun fetchWeatherSync(city: String): WeatherResponse {
         val encodedCity = java.net.URLEncoder.encode(city, "UTF-8")
         val urlStr = "https://api.weatherapi.com/v1/forecast.json?key=$API_KEY&q=$encodedCity&days=5&aqi=no&alerts=no"
-        val url = java.net.URL(urlStr)
-        val conn = url.openConnection() as java.net.HttpURLConnection
-        conn.requestMethod = "GET"
-        conn.connectTimeout = 10000
-        conn.readTimeout = 10000
-
-        val responseCode = conn.responseCode
-        if (responseCode != 200) {
-            val errScanner = java.util.Scanner(conn.errorStream ?: conn.inputStream)
-            val errResponse = if (errScanner.hasNext()) errScanner.useDelimiter("\\A").next() else ""
-            errScanner.close()
-            throw Exception("HTTP Xatolik: $responseCode - $errResponse")
-        }
-
-        val scanner = java.util.Scanner(conn.inputStream)
-        val response = scanner.useDelimiter("\\A").next()
-        scanner.close()
+        val response = java.net.URL(urlStr).readText()
 
         val json = org.json.JSONObject(response)
         
