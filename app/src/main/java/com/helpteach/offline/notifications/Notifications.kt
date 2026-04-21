@@ -19,18 +19,56 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
+import android.speech.tts.TextToSpeech
+import java.util.Locale
+import kotlinx.coroutines.delay
+
 class AlarmReceiver : BroadcastReceiver() {
+    private var tts: TextToSpeech? = null
+
     override fun onReceive(context: Context, intent: Intent) {
+        val pendingResult = goAsync()
         val action = intent.action
         val id = intent.getIntExtra("id", 0)
         val title = intent.getStringExtra("title") ?: "Eslatma"
         val message = intent.getStringExtra("message") ?: ""
+
+        val textToSpeak = when (action) {
+            "ACTION_LESSON_REMINDER" -> "Hurmatli foydalanuvchi, sizning dars mashg'ulotingiz bor."
+            "ACTION_CUSTOM_REMINDER" -> "Sizda bajarilmagan vazifalar bor. Iltimos e'tibor bering."
+            "ACTION_MORNING_SUMMARY" -> "Xayrli tong! Bugungi darslar ro'yxatini va vazifalarni ko'rib chiqing."
+            "ACTION_EVENING_SUMMARY" -> "Kechki xulosa. Bajarilgan vazifalarni tekshiring."
+            else -> ""
+        }
 
         when (action) {
             "ACTION_LESSON_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
             "ACTION_MORNING_SUMMARY" -> handleMorningSummary(context)
             "ACTION_EVENING_SUMMARY" -> handleEveningSummary(context)
             "ACTION_CUSTOM_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
+        }
+
+        if (textToSpeak.isNotEmpty()) {
+            tts = TextToSpeech(context.applicationContext) { status ->
+                if (status == TextToSpeech.SUCCESS) {
+                    val result = tts?.setLanguage(Locale("uz", "UZ"))
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        // Fallback to default if Uzbek is not available
+                        tts?.setLanguage(Locale.getDefault())
+                    }
+                    tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "AlarmTTS")
+                    
+                    CoroutineScope(Dispatchers.IO).launch {
+                        delay(6000)
+                        tts?.shutdown()
+                        pendingResult.finish()
+                    }
+                } else {
+                    pendingResult.finish()
+                }
+            }
+        } else {
+            pendingResult.finish()
         }
     }
 
