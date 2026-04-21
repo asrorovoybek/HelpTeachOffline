@@ -74,15 +74,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // --- Weather ---
     fun fetchWeather(city: String) {
         _weatherState.value = WeatherState.Loading
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                val response = RetrofitInstance.api.getWeather(
-                    apiKey = RetrofitInstance.DEFAULT_API_KEY,
-                    city = city
-                )
+                val response = com.helpteach.offline.network.NativeWeatherFetcher.fetchWeatherSync(city)
                 _weatherState.value = WeatherState.Success(response)
             } catch (e: Throwable) {
-                _weatherState.value = WeatherState.Error(e.stackTraceToString())
+                _weatherState.value = WeatherState.Error(e.message ?: "Noma'lum xatolik yuz berdi")
             }
         }
     }

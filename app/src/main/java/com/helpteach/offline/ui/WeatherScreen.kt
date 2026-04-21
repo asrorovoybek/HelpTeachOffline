@@ -24,17 +24,7 @@ fun WeatherScreen(viewModel: AppViewModel) {
         viewModel.fetchWeather(city)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Ob-havo: $city") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

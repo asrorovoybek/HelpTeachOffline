@@ -32,17 +32,7 @@ fun ProfileScreen(viewModel: AppViewModel) {
     var isEditingProfile by remember { mutableStateOf(false) }
     var isEditingSettings by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Mening Profilim ✨") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,51 +93,6 @@ fun ProfileScreen(viewModel: AppViewModel) {
                 }
             }
 
-            // About App Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("ℹ️ Dastur Haqida", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onTertiaryContainer)
-                    Divider(color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.2f))
-                    
-                    ProfileRow("Muallif", "Asrorov Oybek 👨‍💻")
-                    
-                    ContactRow(
-                        icon = Icons.Filled.Phone,
-                        title = "Telefon",
-                        value = "+998 91 810 95 96",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+998918109596"))
-                            context.startActivity(intent)
-                        }
-                    )
-                    
-                    ContactRow(
-                        icon = Icons.Filled.Email,
-                        title = "E-mail",
-                        value = "AsrorovOybek@gmail.com",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:AsrorovOybek@gmail.com"))
-                            context.startActivity(intent)
-                        }
-                    )
-                    
-                    ContactRow(
-                        icon = Icons.Filled.Send,
-                        title = "Telegram",
-                        value = "@Asrorov_Oybek",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/Asrorov_Oybek"))
-                            context.startActivity(intent)
-                        }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(30.dp))
         }
     }
 

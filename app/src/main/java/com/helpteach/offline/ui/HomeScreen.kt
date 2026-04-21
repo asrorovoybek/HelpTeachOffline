@@ -34,17 +34,7 @@ fun HomeScreen(viewModel: AppViewModel) {
         (l.weekType == "every" || (l.weekType == "odd" && isOddWeek) || (l.weekType == "even" && !isOddWeek))
     }.sortedBy { it.startTime }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Bugungi Reja") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
