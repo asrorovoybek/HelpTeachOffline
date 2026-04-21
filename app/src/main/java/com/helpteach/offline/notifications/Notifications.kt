@@ -1,6 +1,5 @@
 package com.helpteach.offline.notifications
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,122 +9,220 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.helpteach.offline.MainActivity
 import com.helpteach.offline.R
+import com.helpteach.offline.data.AppDatabase
 import com.helpteach.offline.data.Lesson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val lessonTitle = intent.getStringExtra("LESSON_TITLE") ?: "Dars boshlanadi"
-        val lessonTime = intent.getStringExtra("LESSON_TIME") ?: ""
+        val action = intent.action
+        val id = intent.getIntExtra("id", 0)
+        val title = intent.getStringExtra("title") ?: "Eslatma"
+        val message = intent.getStringExtra("message") ?: ""
 
-        showNotification(context, lessonTitle, lessonTime)
+        when (action) {
+            "ACTION_LESSON_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
+            "ACTION_MORNING_SUMMARY" -> handleMorningSummary(context)
+            "ACTION_EVENING_SUMMARY" -> handleEveningSummary(context)
+            "ACTION_CUSTOM_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
+        }
     }
 
-    private fun showNotification(context: Context, title: String, time: String) {
-        val channelId = "helpteach_channel"
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private fun handleMorningSummary(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(context)
+            val cal = Calendar.getInstance()
+            // In Java Calendar, Sunday=1, Monday=2. Our DB: Monday=0, Sunday=6
+            var dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 2
+            if (dayOfWeek < 0) dayOfWeek = 6
+            
+            val weekNumber = cal.get(Calendar.WEEK_OF_YEAR)
+            val isOddWeek = weekNumber % 2 != 0
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "HelpTeach Eslatmalar",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Darslar boshlanishidan oldin eslatmalar"
+            val lessons = db.lessonDao().getLessonsByDay(dayOfWeek).firstOrNull() ?: emptyList()
+            val validLessons = lessons.filter { l ->
+                l.weekType == "every" || (l.weekType == "odd" && isOddWeek) || (l.weekType == "even" && !isOddWeek)
             }
-            notificationManager.createNotificationChannel(channel)
+            val pendingTasks = db.taskDao().getPendingTasks().firstOrNull() ?: emptyList()
+
+            val msg = buildString {
+                if (validLessons.isNotEmpty()) {
+                    append("📚 Bugungi darslar: ${validLessons.size} ta\n")
+                } else {
+                    append("📚 Bugun dars yo'q!\n")
+                }
+                if (pendingTasks.isNotEmpty()) {
+                    append("✅ Bajarilmagan vazifalar: ${pendingTasks.size} ta")
+                }
+            }
+            
+            NotificationHelper.showNotification(context, 9991, "🌅 Xayrli tong!", msg.trim())
+            // Reschedule for tomorrow
+            NotificationHelper.scheduleDailySummary(context, "morning")
         }
+    }
 
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // using standard android icon for simplicity
-            .setContentTitle("Eslatma: $title")
-            .setContentText("Dars 5 daqiqadan so'ng, $time da boshlanadi.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
+    private fun handleEveningSummary(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(context)
+            val pendingTasks = db.taskDao().getPendingTasks().firstOrNull() ?: emptyList()
+            val completedTasks = db.taskDao().getCompletedTasks().firstOrNull() ?: emptyList()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+            val msg = buildString {
+                append("✅ Bajarilgan vazifalar: ${completedTasks.size} ta\n")
+                append("⏳ Kutayotgan vazifalar: ${pendingTasks.size} ta")
+            }
+            
+            NotificationHelper.showNotification(context, 9992, "🌙 Kechki xulosa", msg.trim())
+            // Reschedule for tomorrow
+            NotificationHelper.scheduleDailySummary(context, "evening")
+        }
     }
 }
 
 object NotificationHelper {
+    private const val CHANNEL_ID = "helpteach_reminders"
 
-    @SuppressLint("ScheduleExactAlarm")
-    fun scheduleLessonAlarm(context: Context, lesson: Lesson) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra("LESSON_TITLE", lesson.title)
-            putExtra("LESSON_TIME", lesson.startTime)
-            putExtra("LESSON_ID", lesson.id)
-        }
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            lesson.id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Parse time (HH:mm)
-        val timeParts = lesson.startTime.split(":")
-        if (timeParts.size != 2) return
-
-        val hour = timeParts[0].toIntOrNull() ?: return
-        val minute = timeParts[1].toIntOrNull() ?: return
-
-        // Setup calendar for the next occurrence of this lesson
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            
-            // Adjust day of week (Calendar.SUNDAY = 1, ... Calendar.SATURDAY = 7)
-            // Our dayOfWeek: 1 = Monday ... 7 = Sunday
-            val calendarDayOfWeek = if (lesson.dayOfWeek == 7) Calendar.SUNDAY else lesson.dayOfWeek + 1
-            set(Calendar.DAY_OF_WEEK, calendarDayOfWeek)
-            
-            // Subtract 5 minutes
-            add(Calendar.MINUTE, -5)
-
-            // If time is in the past, move to next week
-            if (timeInMillis < System.currentTimeMillis()) {
-                add(Calendar.WEEK_OF_YEAR, 1)
+    fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Dars va Vazifalar Eslatmalari",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Darsgacha bo'lgan vaqt va kundalik xulosalar haqida bildirishnomalar"
             }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.set(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
-        } else {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
         }
     }
 
-    fun cancelLessonAlarm(context: Context, lessonId: Int) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, AlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            lessonId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    fun showNotification(context: Context, id: Int, title: String, message: String) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context, id, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        alarmManager.cancel(pendingIntent)
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(id, builder.build())
+    }
+
+    fun scheduleDailySummary(context: Context, type: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(context)
+            val settings = db.settingsDao().getSettings().firstOrNull()
+            if (settings?.doNotDisturb == true) return@launch
+
+            val timeStr = if (type == "morning") settings?.morningTime ?: "07:00" else settings?.eveningTime ?: "21:00"
+            val parts = timeStr.split(":")
+            if (parts.size != 2) return@launch
+            
+            val hour = parts[0].toIntOrNull() ?: return@launch
+            val min = parts[1].toIntOrNull() ?: return@launch
+
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, min)
+                set(Calendar.SECOND, 0)
+                if (before(Calendar.getInstance())) {
+                    add(Calendar.DAY_OF_YEAR, 1)
+                }
+            }
+
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                action = if (type == "morning") "ACTION_MORNING_SUMMARY" else "ACTION_EVENING_SUMMARY"
+            }
+            val reqCode = if (type == "morning") 8881 else 8882
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            try {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+            } catch (e: SecurityException) {
+                // permission denied
+            }
+        }
+    }
+
+    fun scheduleLessonAlarmsForToday(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val db = AppDatabase.getDatabase(context)
+            val settings = db.settingsDao().getSettings().firstOrNull()
+            if (settings?.doNotDisturb == true) return@launch
+
+            val cal = Calendar.getInstance()
+            var dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 2
+            if (dayOfWeek < 0) dayOfWeek = 6
+            val isOddWeek = cal.get(Calendar.WEEK_OF_YEAR) % 2 != 0
+
+            val lessons = db.lessonDao().getLessonsByDay(dayOfWeek).firstOrNull() ?: emptyList()
+            for (lesson in lessons) {
+                if (lesson.weekType == "odd" && !isOddWeek) continue
+                if (lesson.weekType == "even" && isOddWeek) continue
+                
+                val parts = lesson.startTime.split(":")
+                if (parts.size != 2) continue
+                val hour = parts[0].toIntOrNull() ?: continue
+                val min = parts[1].toIntOrNull() ?: continue
+
+                // 30 mins before
+                if (settings.notifyBefore30) {
+                    setAlarm(context, lesson, hour, min, -30, "📅 30 daqiqadan dars boshlanadi!")
+                }
+                // 10 mins before
+                if (settings.notifyBefore10) {
+                    setAlarm(context, lesson, hour, min, -10, "⚡️ 10 daqiqa qoldi!")
+                }
+                // On time
+                if (settings.notifyOnTime) {
+                    setAlarm(context, lesson, hour, min, 0, "🔴 DARS BOSHLANDI!")
+                }
+            }
+        }
+    }
+
+    private fun setAlarm(context: Context, lesson: Lesson, hour: Int, min: Int, offsetMins: Int, title: String) {
+        val cal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, min)
+            set(Calendar.SECOND, 0)
+            add(Calendar.MINUTE, offsetMins)
+        }
+        
+        if (cal.before(Calendar.getInstance())) return // already passed today
+
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = "ACTION_LESSON_REMINDER"
+            putExtra("id", lesson.id * 100 + Math.abs(offsetMins))
+            putExtra("title", title)
+            putExtra("message", "📚 Fan: ${lesson.subject}\n🏛 Xona: ${lesson.room}\n👥 Guruh: ${lesson.groupName}")
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, lesson.id * 100 + Math.abs(offsetMins), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        try {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+        } catch (e: SecurityException) {
+            // Permission denied
+        }
     }
 }

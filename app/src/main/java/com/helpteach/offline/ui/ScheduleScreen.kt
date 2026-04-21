@@ -5,22 +5,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.helpteach.offline.viewmodel.LessonViewModel
+import com.helpteach.offline.data.Lesson
+import com.helpteach.offline.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleScreen(viewModel: LessonViewModel) {
+fun ScheduleScreen(viewModel: AppViewModel) {
     val allLessons by viewModel.allLessons.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+
+    val days = listOf("Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba")
+    var selectedDay by remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dars Jadvali") },
+                title = { Text("Jadval") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -29,44 +34,141 @@ fun ScheduleScreen(viewModel: LessonViewModel) {
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Dars qo'shish")
+                Icon(Icons.Filled.Add, "Dars qo'shish")
             }
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(padding)
         ) {
-            // Group by dayOfWeek
-            val grouped = allLessons.groupBy { it.dayOfWeek }.toSortedMap()
-            val days = listOf("Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba")
-
-            grouped.forEach { (day, lessons) ->
-                item {
-                    Text(
-                        text = days.getOrElse(day - 1) { "Noma'lum" },
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-                        color = MaterialTheme.colorScheme.primary
+            ScrollableTabRow(
+                selectedTabIndex = selectedDay,
+                edgePadding = 8.dp
+            ) {
+                days.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedDay == index,
+                        onClick = { selectedDay = index },
+                        text = { Text(title) }
                     )
                 }
-                items(lessons) { lesson ->
-                    LessonCard(lesson = lesson, onDelete = { viewModel.deleteLesson(it) })
+            }
+
+            val dayLessons = allLessons.filter { it.dayOfWeek == selectedDay }
+
+            if (dayLessons.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Text("Bu kunga dars kiritilmagan.")
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(dayLessons) { lesson ->
+                        LessonCardWithDelete(lesson = lesson, onDelete = { viewModel.deleteLesson(lesson) })
+                    }
                 }
             }
         }
-
-        if (showAddDialog) {
-            AddLessonDialog(
-                onDismiss = { showAddDialog = false },
-                onAdd = { lesson ->
-                    viewModel.insertLesson(lesson)
-                    showAddDialog = false
-                }
-            )
-        }
     }
+
+    if (showAddDialog) {
+        AddLessonDialog(
+            dayOfWeek = selectedDay,
+            onDismiss = { showAddDialog = false },
+            onSave = { lesson ->
+                viewModel.addLesson(lesson)
+                showAddDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun LessonCardWithDelete(lesson: Lesson, onDelete: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    LessonCard(lesson = lesson, onLongClick = { showDeleteConfirm = true })
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("O'chirish") },
+            text = { Text("Ushbu darsni rostdan ham o'chirmoqchimisiz?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteConfirm = false
+                }) {
+                    Text("O'chirish", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Bekor qilish") }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddLessonDialog(dayOfWeek: Int, onDismiss: () -> Unit, onSave: (Lesson) -> Unit) {
+    var subject by remember { mutableStateOf("") }
+    var room by remember { mutableStateOf("") }
+    var groupName by remember { mutableStateOf("") }
+    var startTime by remember { mutableStateOf("08:00") }
+    var endTime by remember { mutableStateOf("09:30") }
+    
+    val lessonTypes = listOf("lecture", "practical", "lab", "course", "seminar", "other")
+    var lessonType by remember { mutableStateOf(lessonTypes[0]) }
+    
+    val weekTypes = listOf("every", "odd", "even")
+    var weekType by remember { mutableStateOf(weekTypes[0]) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Yangi dars") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = subject, onValueChange = { subject = it }, label = { Text("Fan nomi") })
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = room, onValueChange = { room = it }, label = { Text("Xona") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = groupName, onValueChange = { groupName = it }, label = { Text("Guruh") }, modifier = Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("Boshlanish (HH:mm)") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("Tugash (HH:mm)") }, modifier = Modifier.weight(1f))
+                }
+                // Simulating simple dropdowns via Buttons for now
+                Text("Hafta turi: ${if(weekType=="every") "Har hafta" else if(weekType=="odd") "Toq" else "Juft"}")
+                Row {
+                    Button(onClick = { weekType = "every" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Har") }
+                    Button(onClick = { weekType = "odd" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Toq") }
+                    Button(onClick = { weekType = "even" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Juft") }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (subject.isNotBlank()) {
+                        onSave(Lesson(
+                            subject = subject, room = room, groupName = groupName,
+                            startTime = startTime, endTime = endTime, dayOfWeek = dayOfWeek,
+                            lessonType = lessonType, weekType = weekType
+                        ))
+                    }
+                }
+            ) {
+                Text("Saqlash")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Bekor qilish") }
+        }
+    )
 }
