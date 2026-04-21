@@ -17,21 +17,35 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFD0BCFF),
-    secondary = Color(0xFFCCC2DC),
-    tertiary = Color(0xFFEFB8C8)
+    primary = Color(0xFF6E56CF),
+    secondary = Color(0xFF12A594),
+    tertiary = Color(0xFFE5484D),
+    background = Color(0xFF111113),
+    surface = Color(0xFF18181B),
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = Color(0xFFEDEDED),
+    onSurface = Color(0xFFEDEDED)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF6650a4),
-    secondary = Color(0xFF625b71),
-    tertiary = Color(0xFF7D5260)
+    primary = Color(0xFF3E63DD),
+    secondary = Color(0xFF0F9384),
+    tertiary = Color(0xFFE5484D),
+    background = Color(0xFFFCFCFC),
+    surface = Color(0xFFFFFFFF),
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = Color(0xFF111113),
+    onSurface = Color(0xFF111113)
 )
 
 @Composable
 fun HelpTeachOfflineTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Forced false for vibrant custom colors
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

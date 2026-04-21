@@ -44,10 +44,11 @@ data class DayData(
 )
 
 object NativeWeatherFetcher {
-    private const val API_KEY = "eb481a50b86a43878b3174205242204"
+    private const val API_KEY = "44e650bf6a744cc3a3312205260804"
 
     fun fetchWeatherSync(city: String): WeatherResponse {
-        val urlStr = "https://api.weatherapi.com/v1/forecast.json?key=\$API_KEY&q=\$city&days=5&aqi=no&alerts=no"
+        val encodedCity = java.net.URLEncoder.encode(city, "UTF-8")
+        val urlStr = "https://api.weatherapi.com/v1/forecast.json?key=$API_KEY&q=$encodedCity&days=5&aqi=no&alerts=no"
         val url = java.net.URL(urlStr)
         val conn = url.openConnection() as java.net.HttpURLConnection
         conn.requestMethod = "GET"
@@ -56,7 +57,10 @@ object NativeWeatherFetcher {
 
         val responseCode = conn.responseCode
         if (responseCode != 200) {
-            throw Exception("HTTP Xatolik: \$responseCode")
+            val errScanner = java.util.Scanner(conn.errorStream ?: conn.inputStream)
+            val errResponse = if (errScanner.hasNext()) errScanner.useDelimiter("\\A").next() else ""
+            errScanner.close()
+            throw Exception("HTTP Xatolik: $responseCode - $errResponse")
         }
 
         val scanner = java.util.Scanner(conn.inputStream)
