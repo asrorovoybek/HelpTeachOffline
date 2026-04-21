@@ -49,22 +49,26 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         if (textToSpeak.isNotEmpty()) {
-            tts = TextToSpeech(context.applicationContext) { status ->
-                if (status == TextToSpeech.SUCCESS) {
-                    val result = tts?.setLanguage(Locale("uz", "UZ"))
-                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        // Fallback to default if Uzbek is not available
-                        tts?.setLanguage(Locale.getDefault())
-                    }
-                    tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "AlarmTTS")
-                    
-                    CoroutineScope(Dispatchers.IO).launch {
-                        delay(6000)
-                        tts?.shutdown()
+            CoroutineScope(Dispatchers.IO).launch {
+                // Bildirishnoma ovozi tugashini kutamiz
+                delay(2500)
+                
+                tts = TextToSpeech(context.applicationContext) { status ->
+                    if (status == TextToSpeech.SUCCESS) {
+                        val result = tts?.setLanguage(Locale("uz", "UZ"))
+                        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            tts?.setLanguage(Locale.getDefault())
+                        }
+                        tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "AlarmTTS")
+                        
+                        CoroutineScope(Dispatchers.IO).launch {
+                            delay(8000)
+                            tts?.shutdown()
+                            pendingResult.finish()
+                        }
+                    } else {
                         pendingResult.finish()
                     }
-                } else {
-                    pendingResult.finish()
                 }
             }
         } else {
@@ -131,17 +135,20 @@ object NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Dars va Vazifalar Eslatmalari",
+                "Dars va vazifalar eslatmalari",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Darsgacha bo'lgan vaqt va kundalik xulosalar haqida bildirishnomalar"
+                description = "Dars va vazifa eslatmalari"
                 enableVibration(true)
-                
-                val audioAttributes = android.media.AudioAttributes.Builder()
-                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(android.media.AudioAttributes.USAGE_ALARM)
-                    .build()
-                setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM), audioAttributes)
+                vibrationPattern = longArrayOf(0, 300, 200, 300)
+                // Oddiy bildirishnoma ovozi (budilnik emas)
+                setSound(
+                    android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION),
+                    android.media.AudioAttributes.Builder()
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                        .build()
+                )
             }
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)

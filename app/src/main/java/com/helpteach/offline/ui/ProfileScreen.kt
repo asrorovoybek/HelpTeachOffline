@@ -50,7 +50,7 @@ fun ProfileScreen(viewModel: AppViewModel) {
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("👤 Shaxsiy ma'lumotlar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text("Shaxsiy ma'lumotlar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         TextButton(onClick = { isEditingProfile = true }) { Text("Tahrirlash ✏️") }
                     }
                     Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
@@ -74,7 +74,7 @@ fun ProfileScreen(viewModel: AppViewModel) {
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("⚙️ Sozlamalar", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Text("Sozlamalar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
                         TextButton(onClick = { isEditingSettings = true }) { Text("O'zgartirish 🛠") }
                     }
                     Divider(color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f))

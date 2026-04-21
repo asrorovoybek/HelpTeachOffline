@@ -46,7 +46,7 @@ fun HomeScreen(viewModel: AppViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Darslar ($weekTypeStr)",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -72,7 +72,7 @@ fun HomeScreen(viewModel: AppViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Vazifalar",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -111,7 +111,7 @@ fun LessonCard(lesson: Lesson, onLongClick: () -> Unit) {
             ) {
                 Text(
                     text = "${lesson.startTime} - ${lesson.endTime}",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Surface(
@@ -126,7 +126,7 @@ fun LessonCard(lesson: Lesson, onLongClick: () -> Unit) {
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = lesson.subject, style = MaterialTheme.typography.titleLarge)
+            Text(text = lesson.subject, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = "Xona: ${lesson.room} | Guruh: ${lesson.groupName}", style = MaterialTheme.typography.bodyMedium)
         }
@@ -155,7 +155,7 @@ fun TaskCard(task: Task, onToggle: () -> Unit) {
             Column {
                 Text(
                     text = task.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
                 if (!task.dueDate.isNullOrBlank()) {
