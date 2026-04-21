@@ -209,6 +209,7 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactRowDialog(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
     Card(

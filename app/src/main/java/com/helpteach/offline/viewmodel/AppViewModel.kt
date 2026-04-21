@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.helpteach.offline.data.*
-import com.helpteach.offline.network.RetrofitInstance
 import com.helpteach.offline.network.WeatherResponse
 import com.helpteach.offline.notifications.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
