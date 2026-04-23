@@ -50,19 +50,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         // Bazaga yozilishini kutamiz
         kotlinx.coroutines.delay(500)
         
+        val currentSettings = settings.value
+        
         // Gemini TTS orqali ovozli xabar generatsiya qilish (fon rejimda)
-        launch(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val text = com.helpteach.offline.network.GeminiTTS.buildLessonText(
-                    lesson.subject, lesson.lessonType, lesson.startTime, lesson.room
-                )
-                val filename = com.helpteach.offline.network.GeminiTTS.lessonAudioFilename(
-                    lesson.dayOfWeek, lesson.startTime, lesson.subject
-                )
-                com.helpteach.offline.network.GeminiTTS.generateAndSave(
-                    getApplication(), text, filename
-                )
-            } catch (_: Exception) { }
+        if (currentSettings != null && currentSettings.apiKey.isNotBlank()) {
+            launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val text = com.helpteach.offline.network.GeminiTTS.buildLessonText(
+                        lesson.subject, lesson.lessonType, lesson.startTime, lesson.room
+                    )
+                    val filename = com.helpteach.offline.network.GeminiTTS.lessonAudioFilename(
+                        lesson.dayOfWeek, lesson.startTime, lesson.subject
+                    )
+                    com.helpteach.offline.network.GeminiTTS.generateAndSave(
+                        getApplication(), text, filename, currentSettings.apiKey
+                    )
+                } catch (_: Exception) { }
+            }
         }
         
         NotificationHelper.scheduleLessonAlarmsForToday(getApplication())
@@ -70,6 +74,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteLesson(lesson: Lesson) = viewModelScope.launch {
         db.lessonDao().deleteLesson(lesson)
+        // Dars o'chirilganda, unga tegishli audio faylni ham o'chiramiz (axlat qoldirmaslik uchun)
+        launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val filename = com.helpteach.offline.network.GeminiTTS.lessonAudioFilename(
+                    lesson.dayOfWeek, lesson.startTime, lesson.subject
+                )
+                val file = com.helpteach.offline.network.GeminiTTS.getAudioFile(getApplication(), filename)
+                if (file != null && file.exists()) {
+                    file.delete()
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     // --- Tasks ---

@@ -155,7 +155,7 @@ fun MainNavigation(viewModel: AppViewModel) {
     }
 
     if (showAboutDialog) {
-        AboutAppDialog(onDismiss = { showAboutDialog = false })
+        AboutAppDialog(viewModel = viewModel, onDismiss = { showAboutDialog = false })
     }
 
     if (showHelpDialog) {
@@ -164,8 +164,65 @@ fun MainNavigation(viewModel: AppViewModel) {
 }
 
 @Composable
-fun AboutAppDialog(onDismiss: () -> Unit) {
+fun AboutAppDialog(viewModel: com.helpteach.offline.viewmodel.AppViewModel, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    var clickCount by remember { mutableStateOf(0) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var showApiKeyDialog by remember { mutableStateOf(false) }
+
+    if (showPasswordDialog) {
+        var password by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showPasswordDialog = false; clickCount = 0 },
+            title = { Text("Maxfiy bo'lim", color = MaterialTheme.colorScheme.primary) },
+            text = {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Parolni kiriting") },
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (password == "250795") {
+                        showPasswordDialog = false
+                        showApiKeyDialog = true
+                    } else {
+                        showPasswordDialog = false
+                        clickCount = 0
+                    }
+                }) { Text("Kirish") }
+            }
+        )
+    }
+
+    if (showApiKeyDialog) {
+        val settings by viewModel.settings.collectAsState()
+        var apiKey by remember { mutableStateOf(settings?.apiKey ?: "") }
+        AlertDialog(
+            onDismissRequest = { showApiKeyDialog = false; clickCount = 0 },
+            title = { Text("API Kalit (Google AI Studio)") },
+            text = {
+                OutlinedTextField(
+                    value = apiKey,
+                    onValueChange = { apiKey = it },
+                    label = { Text("Gemini API Key") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val s = settings ?: com.helpteach.offline.data.Settings()
+                    viewModel.saveSettings(s.copy(apiKey = apiKey.trim()))
+                    showApiKeyDialog = false
+                    clickCount = 0
+                }) { Text("Saqlash") }
+            }
+        )
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { 
@@ -196,7 +253,17 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
                 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("HelpTeach Offline", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Text("Versiya: 1.0.0", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "Versiya: 1.0.0", 
+                        style = MaterialTheme.typography.bodyMedium, 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.clickable {
+                            clickCount++
+                            if (clickCount >= 3) {
+                                showPasswordDialog = true
+                            }
+                        }
+                    )
                 }
                 
                 Divider()

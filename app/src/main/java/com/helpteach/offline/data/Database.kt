@@ -34,7 +34,8 @@ data class Settings(
     val notifyBefore10: Boolean = true,
     val notifyOnTime: Boolean = true,
     val doNotDisturb: Boolean = false,
-    val weatherCity: String = "Qarshi"
+    val weatherCity: String = "Qarshi",
+    val apiKey: String = "" // Added field for Gemini API Key
 )
 
 @Entity(tableName = "lessons")
@@ -141,7 +142,7 @@ interface ReminderDao {
 
 @Database(
     entities = [Profile::class, Settings::class, Lesson::class, Task::class, CustomReminder::class],
-    version = 2, // version up for migration
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

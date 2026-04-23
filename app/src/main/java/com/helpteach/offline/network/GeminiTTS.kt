@@ -12,7 +12,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object GeminiTTS {
-    private const val API_KEY = "AIzaSyBz1I2spQVvTdMstQMnXp83FB4lUebz6NA"
     private const val MODEL = "gemini-2.5-flash-preview-tts"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
@@ -20,9 +19,10 @@ object GeminiTTS {
      * Matnni ovozga aylantiradi va faylga saqlaydi.
      * @return true agar muvaffaqiyatli bo'lsa
      */
-    fun generateAndSave(context: Context, text: String, filename: String): Boolean {
+    fun generateAndSave(context: Context, text: String, filename: String, apiKey: String): Boolean {
+        if (apiKey.isBlank()) return false
         try {
-            val url = URL("$BASE_URL/$MODEL:generateContent?key=$API_KEY")
+            val url = URL("$BASE_URL/$MODEL:generateContent?key=$apiKey")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
             connection.connectTimeout = 30000
