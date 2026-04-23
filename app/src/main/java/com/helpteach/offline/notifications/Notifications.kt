@@ -55,34 +55,57 @@ class AlarmReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 // Bildirishnoma ovozi tugashini kutamiz
-                delay(2000)
+                delay(1500)
 
                 // Avval shaxsiy Gemini TTS faylni tekshirish
                 val customAudioFile = if (ttsFilename != null) {
                     com.helpteach.offline.network.GeminiTTS.getAudioFile(appContext, ttsFilename)
                 } else null
 
-                if (customAudioFile != null) {
-                    val mediaPlayer = MediaPlayer()
-                    mediaPlayer.setDataSource(customAudioFile.absolutePath)
-                    mediaPlayer.prepare()
-                    mediaPlayer.setOnCompletionListener { mp ->
-                        mp.release()
-                        pendingResult.finish()
-                    }
-                    mediaPlayer.start()
-                } else if (fallbackAudioResId != null) {
-                    val mediaPlayer = MediaPlayer.create(appContext, fallbackAudioResId)
-                    if (mediaPlayer != null) {
+                val audioAttributes = android.media.AudioAttributes.Builder()
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                    .build()
+
+                var playedCustom = false
+                if (customAudioFile != null && customAudioFile.exists() && customAudioFile.length() > 0) {
+                    try {
+                        val mediaPlayer = MediaPlayer()
+                        mediaPlayer.setAudioAttributes(audioAttributes)
+                        mediaPlayer.setDataSource(customAudioFile.absolutePath)
+                        mediaPlayer.prepare()
                         mediaPlayer.setOnCompletionListener { mp ->
                             mp.release()
                             pendingResult.finish()
                         }
                         mediaPlayer.start()
-                    } else {
+                        playedCustom = true
+                    } catch (e: Exception) {
+                        playedCustom = false
+                    }
+                }
+
+                if (!playedCustom && fallbackAudioResId != null) {
+                    try {
+                        val mediaPlayer = MediaPlayer()
+                        mediaPlayer.setAudioAttributes(audioAttributes)
+                        val afd = appContext.resources.openRawResourceFd(fallbackAudioResId)
+                        if (afd != null) {
+                            mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                            afd.close()
+                            mediaPlayer.prepare()
+                            mediaPlayer.setOnCompletionListener { mp ->
+                                mp.release()
+                                pendingResult.finish()
+                            }
+                            mediaPlayer.start()
+                        } else {
+                            pendingResult.finish()
+                        }
+                    } catch (e: Exception) {
                         pendingResult.finish()
                     }
-                } else {
+                } else if (!playedCustom) {
                     pendingResult.finish()
                 }
             } catch (e: Exception) {

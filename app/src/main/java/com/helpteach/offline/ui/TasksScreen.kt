@@ -120,7 +120,7 @@ fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task, String) -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Vazifa nomi") })
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Izoh (ixtiyoriy)") })
-                OutlinedTextField(value = dueDate, onValueChange = { dueDate = it }, label = { Text("Sana (YYYY-MM-DD) ixtiyoriy") })
+                OutlinedTextField(value = dueDate, onValueChange = { dueDate = it }, label = { Text("Sana (DD.MM.YYYY) ixtiyoriy") })
                 OutlinedTextField(value = remindTime, onValueChange = { remindTime = it }, label = { Text("Bong urish vaqti (HH:mm) ixtiyoriy") })
                 Text("Agar vaqt kiritsangiz, shu soatda signal chalib eslatadi 🔔", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
