@@ -47,8 +47,24 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // --- Lessons ---
     fun addLesson(lesson: Lesson) = viewModelScope.launch {
         db.lessonDao().insertLesson(lesson)
-        // Bazaga yozilishini kutamiz, keyin alarmlarni rejalashtirish
+        // Bazaga yozilishini kutamiz
         kotlinx.coroutines.delay(500)
+        
+        // Gemini TTS orqali ovozli xabar generatsiya qilish (fon rejimda)
+        launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val text = com.helpteach.offline.network.GeminiTTS.buildLessonText(
+                    lesson.subject, lesson.lessonType, lesson.startTime, lesson.room
+                )
+                val filename = com.helpteach.offline.network.GeminiTTS.lessonAudioFilename(
+                    lesson.dayOfWeek, lesson.startTime, lesson.subject
+                )
+                com.helpteach.offline.network.GeminiTTS.generateAndSave(
+                    getApplication(), text, filename
+                )
+            } catch (_: Exception) { }
+        }
+        
         NotificationHelper.scheduleLessonAlarmsForToday(getApplication())
     }
 

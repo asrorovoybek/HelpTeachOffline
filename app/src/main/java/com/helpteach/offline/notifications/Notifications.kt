@@ -29,9 +29,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val id = intent.getIntExtra("id", 0)
         val title = intent.getStringExtra("title") ?: "Eslatma"
         val message = intent.getStringExtra("message") ?: ""
+        val ttsFilename = intent.getStringExtra("tts_filename")
 
-        // Ovozli fayl tanlash
-        val audioResId = when (action) {
+        // Standart ovozli fayl tanlash (fallback)
+        val fallbackAudioResId = when (action) {
             "ACTION_LESSON_REMINDER" -> com.helpteach.offline.R.raw.lesson_reminder
             "ACTION_LESSON_STARTED" -> com.helpteach.offline.R.raw.lesson_started
             "ACTION_CUSTOM_REMINDER" -> com.helpteach.offline.R.raw.task_reminder
@@ -50,11 +51,27 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         // Ovozli xabarni chalish
-        if (audioResId != null) {
-            val handler = android.os.Handler(android.os.Looper.getMainLooper())
-            handler.postDelayed({
-                try {
-                    val mediaPlayer = MediaPlayer.create(context.applicationContext, audioResId)
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        handler.postDelayed({
+            try {
+                // Avval shaxsiy Gemini TTS faylni tekshirish
+                val customAudioFile = if (ttsFilename != null) {
+                    com.helpteach.offline.network.GeminiTTS.getAudioFile(context, ttsFilename)
+                } else null
+
+                if (customAudioFile != null) {
+                    // Shaxsiy ovozli xabar mavjud — uni chalish
+                    val mediaPlayer = MediaPlayer()
+                    mediaPlayer.setDataSource(customAudioFile.absolutePath)
+                    mediaPlayer.prepare()
+                    mediaPlayer.setOnCompletionListener { mp ->
+                        mp.release()
+                        pendingResult.finish()
+                    }
+                    mediaPlayer.start()
+                } else if (fallbackAudioResId != null) {
+                    // Standart audio faylni chalish
+                    val mediaPlayer = MediaPlayer.create(context.applicationContext, fallbackAudioResId)
                     if (mediaPlayer != null) {
                         mediaPlayer.setOnCompletionListener { mp ->
                             mp.release()
@@ -64,13 +81,13 @@ class AlarmReceiver : BroadcastReceiver() {
                     } else {
                         pendingResult.finish()
                     }
-                } catch (e: Exception) {
+                } else {
                     pendingResult.finish()
                 }
-            }, 2500)
-        } else {
-            pendingResult.finish()
-        }
+            } catch (e: Exception) {
+                pendingResult.finish()
+            }
+        }, 2500)
     }
 
     private fun handleMorningSummary(context: Context) {
@@ -292,11 +309,16 @@ object NotificationHelper {
         
         if (cal.before(Calendar.getInstance())) return // already passed today
 
+        val ttsFilename = com.helpteach.offline.network.GeminiTTS.lessonAudioFilename(
+            lesson.dayOfWeek, lesson.startTime, lesson.subject
+        )
+
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = actionType
             putExtra("id", lesson.id * 100 + Math.abs(offsetMins))
             putExtra("title", title)
             putExtra("message", "📚 Fan: ${lesson.subject}\n🏛 Xona: ${lesson.room}\n👥 Guruh: ${lesson.groupName}")
+            putExtra("tts_filename", ttsFilename)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context, lesson.id * 100 + Math.abs(offsetMins), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
