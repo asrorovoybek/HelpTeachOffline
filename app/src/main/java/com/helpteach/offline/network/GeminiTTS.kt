@@ -12,7 +12,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object GeminiTTS {
-    private const val API_KEY = "AIzaSyCRjzopXGS0PVMpJK7rpHxp-GtIXb6KuJc"
+    private const val API_KEY = "AIzaSyBz1I2spQVvTdMstQMnXp83FB4lUebz6NA"
     private const val MODEL = "gemini-2.5-flash-preview-tts"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
