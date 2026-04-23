@@ -126,6 +126,12 @@ fun AddLessonDialog(dayOfWeek: Int, onDismiss: () -> Unit, onSave: (Lesson) -> U
     val weekTypes = listOf("every", "odd", "even")
     var weekType by remember { mutableStateOf(weekTypes[0]) }
 
+    val context = LocalContext.current
+    var customAudioUri by remember { mutableStateOf<Uri?>(null) }
+    val audioPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
+        customAudioUri = uri
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Yangi dars") },
@@ -160,12 +166,6 @@ fun AddLessonDialog(dayOfWeek: Int, onDismiss: () -> Unit, onSave: (Lesson) -> U
                 }
                 
                 // Audio Selection
-                val context = LocalContext.current
-                var customAudioUri by remember { mutableStateOf<Uri?>(null) }
-                val audioPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
-                    customAudioUri = uri
-                }
-
                 if (customAudioUri == null) {
                     OutlinedButton(
                         onClick = { audioPicker.launch("audio/*") },

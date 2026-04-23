@@ -118,6 +118,12 @@ fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task, String) -> Unit) {
     var dueDate by remember { mutableStateOf("") }
     var remindTime by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    var customAudioUri by remember { mutableStateOf<Uri?>(null) }
+    val audioPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
+        customAudioUri = uri
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Yangi vazifa") },
@@ -130,12 +136,6 @@ fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task, String) -> Unit) {
                 Text("Agar vaqt kiritsangiz, shu soatda signal chalib eslatadi 🔔", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 
                 // Audio Selection
-                val context = LocalContext.current
-                var customAudioUri by remember { mutableStateOf<Uri?>(null) }
-                val audioPicker = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
-                    customAudioUri = uri
-                }
-
                 if (customAudioUri == null) {
                     OutlinedButton(
                         onClick = { audioPicker.launch("audio/*") },
