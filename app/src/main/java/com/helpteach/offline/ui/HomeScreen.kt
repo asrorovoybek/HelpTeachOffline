@@ -119,7 +119,7 @@ fun LessonCard(lesson: Lesson, onLongClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
-                        text = lesson.lessonType.uppercase(),
+                        text = lessonTypeToUzbek(lesson.lessonType),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -167,5 +167,17 @@ fun TaskCard(task: Task, onToggle: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+fun lessonTypeToUzbek(type: String): String {
+    return when (type.lowercase()) {
+        "lecture" -> "Ma'ruza"
+        "practical" -> "Amaliyot"
+        "lab" -> "Laboratoriya"
+        "seminar" -> "Seminar"
+        "course" -> "Kurs ishi"
+        "other" -> "Boshqa"
+        else -> type
     }
 }

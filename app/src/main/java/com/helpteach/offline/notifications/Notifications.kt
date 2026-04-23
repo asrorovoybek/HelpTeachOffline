@@ -33,6 +33,7 @@ class AlarmReceiver : BroadcastReceiver() {
         // Ovozli fayl tanlash
         val audioResId = when (action) {
             "ACTION_LESSON_REMINDER" -> com.helpteach.offline.R.raw.lesson_reminder
+            "ACTION_LESSON_STARTED" -> com.helpteach.offline.R.raw.lesson_started
             "ACTION_CUSTOM_REMINDER" -> com.helpteach.offline.R.raw.task_reminder
             "ACTION_MORNING_SUMMARY" -> com.helpteach.offline.R.raw.morning_summary
             "ACTION_EVENING_SUMMARY" -> com.helpteach.offline.R.raw.evening_summary
@@ -42,6 +43,7 @@ class AlarmReceiver : BroadcastReceiver() {
         // Bildirishnoma ko'rsatish
         when (action) {
             "ACTION_LESSON_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
+            "ACTION_LESSON_STARTED" -> NotificationHelper.showNotification(context, id, title, message)
             "ACTION_MORNING_SUMMARY" -> handleMorningSummary(context)
             "ACTION_EVENING_SUMMARY" -> handleEveningSummary(context)
             "ACTION_CUSTOM_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
@@ -272,13 +274,13 @@ object NotificationHelper {
                 }
                 // On time
                 if (settings?.notifyOnTime == true) {
-                    setAlarm(context, lesson, hour, min, 0, "🔴 DARS BOSHLANDI!")
+                    setAlarm(context, lesson, hour, min, 0, "🔴 DARS BOSHLANDI!", "ACTION_LESSON_STARTED")
                 }
             }
         }
     }
 
-    private fun setAlarm(context: Context, lesson: Lesson, hour: Int, min: Int, offsetMins: Int, title: String) {
+    private fun setAlarm(context: Context, lesson: Lesson, hour: Int, min: Int, offsetMins: Int, title: String, actionType: String = "ACTION_LESSON_REMINDER") {
         val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, min)
@@ -289,7 +291,7 @@ object NotificationHelper {
         if (cal.before(Calendar.getInstance())) return // already passed today
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
-            action = "ACTION_LESSON_REMINDER"
+            action = actionType
             putExtra("id", lesson.id * 100 + Math.abs(offsetMins))
             putExtra("title", title)
             putExtra("message", "📚 Fan: ${lesson.subject}\n🏛 Xona: ${lesson.room}\n👥 Guruh: ${lesson.groupName}")

@@ -157,7 +157,7 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Dastur Haqida")
+                Text("Dastur haqida")
             }
         },
         text = {
@@ -186,14 +186,14 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
                 
                 Divider()
                 
-                Text("Muallif: Asrorov Oybek \uD83D\uDC68\u200D\uD83D\uDCBB", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Muallif: O.A.Asrorov \uD83D\uDC68\u200D\uD83D\uDCBB", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     ContactRowDialog(icon = Icons.Filled.Phone, title = "Telefon", value = "+998 91 810 95 96") {
                         context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:+998918109596")))
                     }
-                    ContactRowDialog(icon = Icons.Filled.Email, title = "E-mail", value = "AsrorovOybek@gmail.com") {
-                        context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:AsrorovOybek@gmail.com")))
+                    ContactRowDialog(icon = Icons.Filled.Email, title = "E-mail", value = "asrorovoybek@gmail.com") {
+                        context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:asrorovoybek@gmail.com")))
                     }
                     ContactRowDialog(icon = Icons.Filled.Send, title = "Telegram", value = "@Asrorov_Oybek") {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/Asrorov_Oybek")))
