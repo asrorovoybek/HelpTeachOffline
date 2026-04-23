@@ -47,6 +47,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     // --- Lessons ---
     fun addLesson(lesson: Lesson) = viewModelScope.launch {
         db.lessonDao().insertLesson(lesson)
+        // Bazaga yozilishini kutamiz, keyin alarmlarni rejalashtirish
+        kotlinx.coroutines.delay(500)
         NotificationHelper.scheduleLessonAlarmsForToday(getApplication())
     }
 

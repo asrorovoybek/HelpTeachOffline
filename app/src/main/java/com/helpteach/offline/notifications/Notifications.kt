@@ -51,10 +51,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // Ovozli xabarni chalish
         if (audioResId != null) {
-            CoroutineScope(Dispatchers.IO).launch {
-                // Bildirishnoma ovozi tugashini kutamiz
-                delay(2500)
-
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            handler.postDelayed({
                 try {
                     val mediaPlayer = MediaPlayer.create(context.applicationContext, audioResId)
                     if (mediaPlayer != null) {
@@ -69,7 +67,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 } catch (e: Exception) {
                     pendingResult.finish()
                 }
-            }
+            }, 2500)
         } else {
             pendingResult.finish()
         }
@@ -104,8 +102,10 @@ class AlarmReceiver : BroadcastReceiver() {
             }
             
             NotificationHelper.showNotification(context, 9991, "🌅 Xayrli tong!", msg.trim())
-            // Reschedule for tomorrow
+            // Ertangi kun uchun qayta rejalashtirish
             NotificationHelper.scheduleDailySummary(context, "morning")
+            // Bugungi darslar uchun alarmlarni avtomatik o'rnatish
+            NotificationHelper.scheduleLessonAlarmsForToday(context)
         }
     }
 
