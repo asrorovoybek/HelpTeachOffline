@@ -51,16 +51,18 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         // Ovozli xabarni chalish
-        val handler = android.os.Handler(android.os.Looper.getMainLooper())
-        handler.postDelayed({
+        val appContext = context.applicationContext
+        CoroutineScope(Dispatchers.Main).launch {
             try {
+                // Bildirishnoma ovozi tugashini kutamiz
+                delay(2000)
+
                 // Avval shaxsiy Gemini TTS faylni tekshirish
                 val customAudioFile = if (ttsFilename != null) {
-                    com.helpteach.offline.network.GeminiTTS.getAudioFile(context, ttsFilename)
+                    com.helpteach.offline.network.GeminiTTS.getAudioFile(appContext, ttsFilename)
                 } else null
 
                 if (customAudioFile != null) {
-                    // Shaxsiy ovozli xabar mavjud — uni chalish
                     val mediaPlayer = MediaPlayer()
                     mediaPlayer.setDataSource(customAudioFile.absolutePath)
                     mediaPlayer.prepare()
@@ -70,8 +72,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     }
                     mediaPlayer.start()
                 } else if (fallbackAudioResId != null) {
-                    // Standart audio faylni chalish
-                    val mediaPlayer = MediaPlayer.create(context.applicationContext, fallbackAudioResId)
+                    val mediaPlayer = MediaPlayer.create(appContext, fallbackAudioResId)
                     if (mediaPlayer != null) {
                         mediaPlayer.setOnCompletionListener { mp ->
                             mp.release()
@@ -87,7 +88,7 @@ class AlarmReceiver : BroadcastReceiver() {
             } catch (e: Exception) {
                 pendingResult.finish()
             }
-        }, 2500)
+        }
     }
 
     private fun handleMorningSummary(context: Context) {
@@ -318,7 +319,9 @@ object NotificationHelper {
             putExtra("id", lesson.id * 100 + Math.abs(offsetMins))
             putExtra("title", title)
             putExtra("message", "📚 Fan: ${lesson.subject}\n🏛 Xona: ${lesson.room}\n👥 Guruh: ${lesson.groupName}")
-            putExtra("tts_filename", ttsFilename)
+            if (actionType == "ACTION_LESSON_REMINDER") {
+                putExtra("tts_filename", ttsFilename)
+            }
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context, lesson.id * 100 + Math.abs(offsetMins), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
