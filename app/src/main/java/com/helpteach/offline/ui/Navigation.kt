@@ -49,6 +49,7 @@ fun MainNavigation(viewModel: AppViewModel) {
     val navController = rememberNavController()
     var showMenu by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -78,7 +79,15 @@ fun MainNavigation(viewModel: AppViewModel) {
                         modifier = Modifier.width(200.dp)
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Dastur haqida ℹ️", fontWeight = FontWeight.Medium) },
+                            text = { Text("Yordam", fontWeight = FontWeight.Medium) },
+                            onClick = {
+                                showMenu = false
+                                showHelpDialog = true
+                            },
+                            leadingIcon = { Icon(Icons.Filled.Help, contentDescription = null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Dastur haqida", fontWeight = FontWeight.Medium) },
                             onClick = {
                                 showMenu = false
                                 showAboutDialog = true
@@ -145,6 +154,10 @@ fun MainNavigation(viewModel: AppViewModel) {
 
     if (showAboutDialog) {
         AboutAppDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    if (showHelpDialog) {
+        HelpDialog(onDismiss = { showHelpDialog = false })
     }
 }
 
@@ -228,5 +241,106 @@ fun ContactRowDialog(icon: ImageVector, title: String, value: String, onClick: (
                 Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             }
         }
+    }
+}
+
+@Composable
+fun HelpDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Foydalanish yo'riqnomasi")
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 450.dp)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                HelpSection(
+                    title = "1. Sozlamalar (birinchi qadam)",
+                    content = "Profil \u2192 Sozlamalar \u2192 O'zgartirish tugmasini bosing. " +
+                            "Ertalabki va kechki eslatma vaqtini kiriting. " +
+                            "Kerakli eslatma turlarini yoqing (30 daqiqa oldin, 10 daqiqa oldin, dars boshlanishi). " +
+                            "\"Saqlash\" tugmasini bosing. Sozlamalar saqlanmaguncha eslatmalar ishlamaydi."
+                )
+
+                HelpSection(
+                    title = "2. Profil",
+                    content = "Profil \u2192 Shaxsiy ma'lumotlar \u2192 Tahrirlash tugmasini bosing. " +
+                            "Ism, familiya va ta'lim muassasangiz nomini kiriting va saqlang."
+                )
+
+                HelpSection(
+                    title = "3. Dars jadvali",
+                    content = "Jadval menyusiga o'ting. Hafta kunini tanlang. " +
+                            "\"+\" tugmasini bosib yangi dars qo'shing: fan nomi, xona, guruh, " +
+                            "boshlanish va tugash vaqtini kiriting. " +
+                            "Dars turini (ma'ruza, amaliyot, lab) va hafta turini (har hafta, toq, juft) tanlang. " +
+                            "Darsni o'chirish uchun dars kartochkasini bosing."
+                )
+
+                HelpSection(
+                    title = "4. Vazifalar",
+                    content = "Vazifalar menyusiga o'ting. \"+\" tugmasini bosib yangi vazifa qo'shing. " +
+                            "Vazifa nomi, izoh (ixtiyoriy) va muddatini kiriting. " +
+                            "Eslatma vaqtini kiritsangiz, belgilangan soatda signal chaladi. " +
+                            "Vazifani bajarilgan deb belgilash uchun checkbox'ni bosing."
+                )
+
+                HelpSection(
+                    title = "5. Ob-havo",
+                    content = "Ob-havo menyusiga o'ting. " +
+                            "\"Internetda ko'rish\" tugmasi orqali Google'da ob-havoni ko'rishingiz " +
+                            "yoki \"Telegram bot orqali\" tugmasi bilan botdan foydalanishingiz mumkin. " +
+                            "Shaharni Profil \u2192 Sozlamalar'dan o'zgartirishingiz mumkin."
+                )
+
+                HelpSection(
+                    title = "6. Eslatmalar va ovozli xabarlar",
+                    content = "Sozlamalar saqlanganidan keyin ilova avtomatik ishlaydi: " +
+                            "darsdan 30 va 10 daqiqa oldin bildirishnoma keladi, " +
+                            "dars boshlanishi bilan ovozli xabar eshitiladi. " +
+                            "Ertalab kundalik xulosa, kechqurun bajarilgan vazifalar haqida xabar olasiz. " +
+                            "Telefon o'chib yonsa ham eslatmalar qayta tiklanadi."
+                )
+
+                HelpSection(
+                    title = "7. Bugungi reja",
+                    content = "Bugun menyusida bugungi kun uchun rejalashtirilgan darslar " +
+                            "va bajarilmagan vazifalar ro'yxati ko'rsatiladi. " +
+                            "Toq yoki juft hafta ekanligi ham ko'rsatiladi."
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
+                Text("Tushundim")
+            }
+        }
+    )
+}
+
+@Composable
+private fun HelpSection(title: String, content: String) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = content,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

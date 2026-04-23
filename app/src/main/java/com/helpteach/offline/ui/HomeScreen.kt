@@ -27,7 +27,7 @@ fun HomeScreen(viewModel: AppViewModel) {
     var todayIndex = cal.get(Calendar.DAY_OF_WEEK) - 2
     if (todayIndex < 0) todayIndex = 6
     val isOddWeek = cal.get(Calendar.WEEK_OF_YEAR) % 2 != 0
-    val weekTypeStr = if (isOddWeek) "Toq Hafta" else "Juft Hafta"
+    val weekTypeStr = if (isOddWeek) "Toq hafta" else "Juft hafta"
 
     val todayLessons = allLessons.filter { l ->
         l.dayOfWeek == todayIndex && 

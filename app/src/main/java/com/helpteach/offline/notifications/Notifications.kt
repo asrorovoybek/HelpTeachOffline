@@ -179,9 +179,10 @@ object NotificationHelper {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(context)
             val settings = db.settingsDao().getSettings().firstOrNull()
-            if (settings?.doNotDisturb == true) return@launch
+            if (settings == null) return@launch // Sozlamalar hali saqlanmagan
+            if (settings.doNotDisturb) return@launch
 
-            val timeStr = if (type == "morning") settings?.morningTime ?: "07:00" else settings?.eveningTime ?: "21:00"
+            val timeStr = if (type == "morning") settings.morningTime else settings.eveningTime
             val parts = timeStr.split(":")
             if (parts.size != 2) return@launch
             
@@ -247,7 +248,8 @@ object NotificationHelper {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(context)
             val settings = db.settingsDao().getSettings().firstOrNull()
-            if (settings?.doNotDisturb == true) return@launch
+            if (settings == null) return@launch // Sozlamalar hali saqlanmagan
+            if (settings.doNotDisturb) return@launch
 
             val cal = Calendar.getInstance()
             var dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 2
@@ -265,15 +267,15 @@ object NotificationHelper {
                 val min = parts[1].toIntOrNull() ?: continue
 
                 // 30 mins before
-                if (settings?.notifyBefore30 == true) {
+                if (settings.notifyBefore30) {
                     setAlarm(context, lesson, hour, min, -30, "📅 30 daqiqadan dars boshlanadi!")
                 }
                 // 10 mins before
-                if (settings?.notifyBefore10 == true) {
+                if (settings.notifyBefore10) {
                     setAlarm(context, lesson, hour, min, -10, "⚡️ 10 daqiqa qoldi!")
                 }
                 // On time
-                if (settings?.notifyOnTime == true) {
+                if (settings.notifyOnTime) {
                     setAlarm(context, lesson, hour, min, 0, "🔴 DARS BOSHLANDI!", "ACTION_LESSON_STARTED")
                 }
             }
