@@ -55,6 +55,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteLesson(lesson: Lesson) = viewModelScope.launch {
         db.lessonDao().deleteLesson(lesson)
+        NotificationHelper.cancelLessonAlarms(getApplication(), lesson)
         // Dars o'chirilganda, unga tegishli audio faylni ham o'chiramiz
         launch(kotlinx.coroutines.Dispatchers.IO) {
             com.helpteach.offline.utils.AudioHelper.deleteAudioFile(lesson.customAudioUri)
@@ -77,6 +78,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     
     fun deleteTask(task: Task) = viewModelScope.launch { 
         db.taskDao().deleteTask(task)
+        NotificationHelper.cancelTaskAlarm(getApplication(), task)
         // Vazifa o'chirilganda, unga tegishli audio faylni ham o'chiramiz
         launch(kotlinx.coroutines.Dispatchers.IO) {
             com.helpteach.offline.utils.AudioHelper.deleteAudioFile(task.customAudioUri)

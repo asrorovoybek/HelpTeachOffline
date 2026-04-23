@@ -53,6 +53,29 @@ class AlarmReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         CoroutineScope(Dispatchers.Main).launch {
             try {
+                // Avval bazadan dars mavjudligini tekshiramiz (agar bu dars eslatmasi bo'lsa)
+                if (action == "ACTION_LESSON_REMINDER" || action == "ACTION_LESSON_STARTED") {
+                    val lessonId = id / 100 // lesson_id ni id dan ajratib olamiz
+                    val exists = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                        AppDatabase.getDatabase(appContext).lessonDao().getLessonById(lessonId) != null
+                    }
+                    if (!exists) {
+                        pendingResult.finish()
+                        return@launch
+                    }
+                } else if (action == "ACTION_CUSTOM_REMINDER") {
+                    val taskTitle = intent.getStringExtra("message") ?: ""
+                    if (taskTitle.isNotBlank()) {
+                        val exists = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                            AppDatabase.getDatabase(appContext).taskDao().getTaskByTitle(taskTitle) != null
+                        }
+                        if (!exists) {
+                            pendingResult.finish()
+                            return@launch
+                        }
+                    }
+                }
+
                 // Bildirishnoma ovozi tugashini kutamiz
                 delay(1500)
 
@@ -354,5 +377,31 @@ object NotificationHelper {
         } catch (e: SecurityException) {
             // Permission denied
         }
+    }
+
+    fun cancelLessonAlarms(context: Context, lesson: Lesson) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val offsets = listOf(-30, -10, 0)
+        for (offset in offsets) {
+            val actionType = if (offset == 0) "ACTION_LESSON_STARTED" else "ACTION_LESSON_REMINDER"
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                action = actionType
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, lesson.id * 100 + Math.abs(offset), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+        }
+    }
+
+    fun cancelTaskAlarm(context: Context, task: com.helpteach.offline.data.Task) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = "ACTION_CUSTOM_REMINDER"
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, task.title.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
     }
 }

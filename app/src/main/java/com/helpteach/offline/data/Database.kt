@@ -123,6 +123,9 @@ interface TaskDao {
 
     @Delete
     suspend fun deleteTask(task: Task)
+
+    @Query("SELECT * FROM tasks WHERE title = :title LIMIT 1")
+    suspend fun getTaskByTitle(title: String): Task?
 }
 
 @Dao
