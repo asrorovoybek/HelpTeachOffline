@@ -385,7 +385,6 @@ object NotificationHelper {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         setAlarmClockHelper(context, alarmManager, cal.timeInMillis, pendingIntent)
     }
-    }
 
     fun cancelLessonAlarms(context: Context, lesson: Lesson) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
