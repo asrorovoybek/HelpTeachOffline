@@ -270,11 +270,23 @@ object NotificationHelper {
                 context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            setAlarmClockHelper(context, alarmManager, cal.timeInMillis, pendingIntent)
+        }
+    }
+
+    private fun setAlarmClockHelper(context: Context, alarmManager: AlarmManager, timeInMillis: Long, pendingIntent: PendingIntent) {
+        val showIntent = Intent(context, MainActivity::class.java)
+        val showPendingIntent = PendingIntent.getActivity(
+            context, 0, showIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val info = AlarmManager.AlarmClockInfo(timeInMillis, showPendingIntent)
+        try {
+            alarmManager.setAlarmClock(info, pendingIntent)
+        } catch (e: SecurityException) {
+            // Exact alarm permission might be missing on some devices or OS versions
             try {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
-            } catch (e: SecurityException) {
-                // permission denied
-            }
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+            } catch (e2: SecurityException) {}
         }
     }
 
@@ -306,9 +318,7 @@ object NotificationHelper {
             context, task.title.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        try {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
-        } catch (e: SecurityException) { }
+        setAlarmClockHelper(context, alarmManager, cal.timeInMillis, pendingIntent)
     }
 
     fun scheduleLessonAlarmsForToday(context: Context) {
@@ -373,11 +383,8 @@ object NotificationHelper {
             context, lesson.id * 100 + Math.abs(offsetMins), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        try {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
-        } catch (e: SecurityException) {
-            // Permission denied
-        }
+        setAlarmClockHelper(context, alarmManager, cal.timeInMillis, pendingIntent)
+    }
     }
 
     fun cancelLessonAlarms(context: Context, lesson: Lesson) {

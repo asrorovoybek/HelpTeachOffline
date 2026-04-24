@@ -283,18 +283,16 @@ fun HelpDialog(onDismiss: () -> Unit) {
                 HelpSection(
                     title = "3. Dars jadvali",
                     content = "Jadval menyusiga o'ting. Hafta kunini tanlang. " +
-                            "\"+\" tugmasini bosib yangi dars qo'shing: fan nomi, xona, guruh, " +
-                            "boshlanish va tugash vaqtini kiriting. " +
-                            "Dars turini (ma'ruza, amaliyot, lab) va hafta turini (har hafta, toq, juft) tanlang. " +
-                            "Darsni o'chirish uchun dars kartochkasini bosing."
+                            "\"+\" tugmasini bosib yangi dars qo'shing. " +
+                            "Ixtiyoriy ravishda dars yoki vazifa uchun qo'shiq/audio biriktirishingiz mumkin. " +
+                            "Darsni o'chirish uchun dars kartochkasini bosing, bunda unga biriktirilgan audio ham xotiradan tozalanadi."
                 )
 
                 HelpSection(
                     title = "4. Vazifalar",
                     content = "Vazifalar menyusiga o'ting. \"+\" tugmasini bosib yangi vazifa qo'shing. " +
-                            "Vazifa nomi, izoh (ixtiyoriy) va muddatini kiriting. " +
-                            "Eslatma vaqtini kiritsangiz, belgilangan soatda signal chaladi. " +
-                            "Vazifani bajarilgan deb belgilash uchun checkbox'ni bosing."
+                            "Muddat va eslatma vaqtini kiritsangiz, signal chaladi. " +
+                            "Vazifaga ham alohida ovozli audio biriktirishingiz mumkin."
                 )
 
                 HelpSection(
@@ -306,19 +304,19 @@ fun HelpDialog(onDismiss: () -> Unit) {
                 )
 
                 HelpSection(
-                    title = "6. Eslatmalar va ovozli xabarlar",
-                    content = "Sozlamalar saqlanganidan keyin ilova avtomatik ishlaydi: " +
-                            "darsdan 30 va 10 daqiqa oldin bildirishnoma keladi, " +
-                            "dars boshlanishi bilan ovozli xabar eshitiladi. " +
-                            "Ertalab kundalik xulosa, kechqurun bajarilgan vazifalar haqida xabar olasiz. " +
-                            "Telefon o'chib yonsa ham eslatmalar qayta tiklanadi."
+                    title = "6. Oflayn eslatmalar va Ovozlar",
+                    content = "Ilova to'liq oflayn, internetdan xoli ishlaydi. " +
+                            "Eslatmalar eng baland (budilnik) rejimida chalinadi. " +
+                            "Agar darsga audio biriktirmagan bo'lsangiz, ilova o'zining standart ishonchli ovozida xabar beradi. " +
+                            "Telefon o'chib yonsa ham barcha budilniklar o'z o'rniga tiklanadi!"
                 )
 
                 HelpSection(
-                    title = "7. Bugungi reja",
-                    content = "Bugun menyusida bugungi kun uchun rejalashtirilgan darslar " +
-                            "va bajarilmagan vazifalar ro'yxati ko'rsatiladi. " +
-                            "Toq yoki juft hafta ekanligi ham ko'rsatiladi."
+                    title = "7. Bugungi reja (Hafta turi)",
+                    content = "Bugun menyusida kunlik reja ko'rsatiladi. " +
+                            "Yuqori burchakda turgan 'Toq hafta' yoki 'Juft hafta' yozuvi ustiga bossangiz, " +
+                            "hafta turini o'zingizning o'qish jadvalingizga moslab o'zgartirishingiz mumkin. " +
+                            "Ilova qolganini shu asosda avtomatik hisoblab ketaveradi!"
                 )
             }
         },
