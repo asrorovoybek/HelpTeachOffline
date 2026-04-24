@@ -44,6 +44,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         NotificationHelper.scheduleLessonAlarmsForToday(getApplication())
     }
 
+    fun setWeekType(isOdd: Boolean) = viewModelScope.launch {
+        val currentSettings = settings.value ?: Settings()
+        val currentWeek = java.util.Calendar.getInstance().get(java.util.Calendar.WEEK_OF_YEAR)
+        saveSettings(currentSettings.copy(baseWeekIsOdd = isOdd, baseWeekNumber = currentWeek))
+    }
+
     // --- Lessons ---
     fun addLesson(lesson: Lesson) = viewModelScope.launch {
         db.lessonDao().insertLesson(lesson)

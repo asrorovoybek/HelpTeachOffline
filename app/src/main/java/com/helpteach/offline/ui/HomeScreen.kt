@@ -20,13 +20,15 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: AppViewModel) {
+    val settings by viewModel.settings.collectAsState()
     val allLessons by viewModel.allLessons.collectAsState()
     val pendingTasks by viewModel.pendingTasks.collectAsState()
 
     val cal = Calendar.getInstance()
     var todayIndex = cal.get(Calendar.DAY_OF_WEEK) - 2
     if (todayIndex < 0) todayIndex = 6
-    val isOddWeek = cal.get(Calendar.WEEK_OF_YEAR) % 2 != 0
+    val currentWeekOfYear = cal.get(Calendar.WEEK_OF_YEAR)
+    val isOddWeek = settings?.isOddWeek(currentWeekOfYear) ?: (currentWeekOfYear % 2 != 0)
     val weekTypeStr = if (isOddWeek) "Toq hafta" else "Juft hafta"
 
     val todayLessons = allLessons.filter { l ->
@@ -44,12 +46,26 @@ fun HomeScreen(viewModel: AppViewModel) {
         ) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Darslar ($weekTypeStr)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Bugungi darslar",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    OutlinedButton(
+                        onClick = { viewModel.setWeekType(!isOddWeek) },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text(text = weekTypeStr, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
             }
 
             if (todayLessons.isEmpty()) {

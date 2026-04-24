@@ -321,7 +321,8 @@ object NotificationHelper {
             val cal = Calendar.getInstance()
             var dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 2
             if (dayOfWeek < 0) dayOfWeek = 6
-            val isOddWeek = cal.get(Calendar.WEEK_OF_YEAR) % 2 != 0
+            val currentWeekOfYear = cal.get(Calendar.WEEK_OF_YEAR)
+            val isOddWeek = settings.isOddWeek(currentWeekOfYear)
 
             val lessons = db.lessonDao().getLessonsByDay(dayOfWeek).firstOrNull() ?: emptyList()
             for (lesson in lessons) {

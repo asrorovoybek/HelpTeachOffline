@@ -134,6 +134,7 @@ fun AddLessonDialog(dayOfWeek: Int, onDismiss: () -> Unit, onSave: (Lesson) -> U
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         title = { Text("Yangi dars") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

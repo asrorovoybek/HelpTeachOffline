@@ -34,8 +34,19 @@ data class Settings(
     val notifyBefore10: Boolean = true,
     val notifyOnTime: Boolean = true,
     val doNotDisturb: Boolean = false,
-    val weatherCity: String = "Qarshi"
-)
+    val weatherCity: String = "Qarshi",
+    val baseWeekIsOdd: Boolean = true,
+    val baseWeekNumber: Int = -1
+) {
+    fun isOddWeek(currentWeekOfYear: Int): Boolean {
+        return if (baseWeekNumber != -1) {
+            val diff = currentWeekOfYear - baseWeekNumber
+            if (diff % 2 == 0) baseWeekIsOdd else !baseWeekIsOdd
+        } else {
+            currentWeekOfYear % 2 != 0
+        }
+    }
+}
 
 @Entity(tableName = "lessons")
 data class Lesson(
@@ -146,7 +157,7 @@ interface ReminderDao {
 
 @Database(
     entities = [Profile::class, Settings::class, Lesson::class, Task::class, CustomReminder::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

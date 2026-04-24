@@ -126,6 +126,7 @@ fun AddTaskDialog(onDismiss: () -> Unit, onSave: (Task, String) -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false),
         title = { Text("Yangi vazifa") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
