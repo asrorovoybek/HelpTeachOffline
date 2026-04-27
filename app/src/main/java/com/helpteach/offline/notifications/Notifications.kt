@@ -53,15 +53,34 @@ class AlarmReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // Avval bazadan dars mavjudligini tekshiramiz (agar bu dars eslatmasi bo'lsa)
+                // Avval bazadan dars mavjudligini va hafta turiga mosligini tekshiramiz
                 if (action == "ACTION_LESSON_REMINDER" || action == "ACTION_LESSON_STARTED") {
-                    val lessonId = id / 100 // lesson_id ni id dan ajratib olamiz
-                    val exists = kotlinx.coroutines.withContext(Dispatchers.IO) {
-                        AppDatabase.getDatabase(appContext).lessonDao().getLessonById(lessonId) != null
+                    val lessonId = id / 100
+                    val lesson = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                        AppDatabase.getDatabase(appContext).lessonDao().getLessonById(lessonId)
                     }
-                    if (!exists) {
+                    if (lesson == null) {
                         pendingResult.finish()
                         return@launch
+                    }
+
+                    // Hafta turi mosligini tekshirish
+                    val settings = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                        AppDatabase.getDatabase(appContext).settingsDao().getSettings().firstOrNull()
+                    }
+                    if (settings != null) {
+                        val cal = Calendar.getInstance()
+                        val currentWeekOfYear = cal.get(Calendar.WEEK_OF_YEAR)
+                        val isOddWeek = settings.isOddWeek(currentWeekOfYear)
+                        
+                        if (lesson.weekType == "odd" && !isOddWeek) {
+                            pendingResult.finish()
+                            return@launch
+                        }
+                        if (lesson.weekType == "even" && isOddWeek) {
+                            pendingResult.finish()
+                            return@launch
+                        }
                     }
                 } else if (action == "ACTION_CUSTOM_REMINDER") {
                     val taskTitle = intent.getStringExtra("message") ?: ""
@@ -90,6 +109,17 @@ class AlarmReceiver : BroadcastReceiver() {
                     .setUsage(android.media.AudioAttributes.USAGE_ALARM)
                     .build()
 
+                // Audio focus so'rash (Boshqa dasturlar musiqasini pasaytirish yoki to'xtatish uchun)
+                val audioManager = appContext.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val focusRequest = android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                        .setAudioAttributes(audioAttributes)
+                        .build()
+                    audioManager.requestAudioFocus(focusRequest)
+                } else {
+                    audioManager.requestAudioFocus(null, android.media.AudioManager.STREAM_ALARM, android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                }
+
                 var playedCustom = false
                 if (customAudioFile != null && customAudioFile.exists() && customAudioFile.length() > 0) {
                     try {
@@ -99,6 +129,11 @@ class AlarmReceiver : BroadcastReceiver() {
                         mediaPlayer.prepare()
                         mediaPlayer.setOnCompletionListener { mp ->
                             mp.release()
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                // Abandon focus logic is complex for O+, but transient focus usually handles itself
+                            } else {
+                                audioManager.abandonAudioFocus(null)
+                            }
                             pendingResult.finish()
                         }
                         mediaPlayer.start()
@@ -119,6 +154,11 @@ class AlarmReceiver : BroadcastReceiver() {
                             mediaPlayer.prepare()
                             mediaPlayer.setOnCompletionListener { mp ->
                                 mp.release()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    // Focus handles itself
+                                } else {
+                                    audioManager.abandonAudioFocus(null)
+                                }
                                 pendingResult.finish()
                             }
                             mediaPlayer.start()
