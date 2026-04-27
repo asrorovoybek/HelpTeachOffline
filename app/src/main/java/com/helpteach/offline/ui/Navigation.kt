@@ -197,7 +197,7 @@ fun AboutAppDialog(onDismiss: () -> Unit) {
                 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("HelpTeach Offline", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Text("Versiya: 1.0.0", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Barqaror versiya: 1.0.0 (Offline Edition)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 
                 Divider()
@@ -275,9 +275,10 @@ fun HelpDialog(onDismiss: () -> Unit) {
                 )
 
                 HelpSection(
-                    title = "2. Profil",
-                    content = "Profil \u2192 Shaxsiy ma'lumotlar \u2192 Tahrirlash tugmasini bosing. " +
-                            "Ism, familiya va ta'lim muassasangiz nomini kiriting va saqlang."
+                    title = "2. Profil va Rasm",
+                    content = "Profil \u2192 Shaxsiy ma'lumotlar qismidagi rasm ustiga bosib o'z rasmingizni yuklashingiz mumkin. " +
+                            "Tahrirlash tugmasi orqali Ism, Rol (O'qituvchi, Talaba, Umumiy) va muassasangizni kiriting. " +
+                            "Rollar tanlanganda qo'shimcha (Lavozim yoki Kurs/Guruh) maydonlari paydo bo'ladi."
                 )
 
                 HelpSection(

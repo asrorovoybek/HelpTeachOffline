@@ -21,6 +21,15 @@ import androidx.compose.ui.unit.dp
 import com.helpteach.offline.data.Profile
 import com.helpteach.offline.data.Settings
 import com.helpteach.offline.viewmodel.AppViewModel
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import coil.compose.AsyncImage
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +40,26 @@ fun ProfileScreen(viewModel: AppViewModel) {
 
     var isEditingProfile by remember { mutableStateOf(false) }
     var isEditingSettings by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            // Copy image to internal storage
+            val inputStream = context.contentResolver.openInputStream(it)
+            val file = File(context.filesDir, "profile_image.jpg")
+            val outputStream = FileOutputStream(file)
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            // Update profile with new image path
+            profile?.let { p ->
+                viewModel.saveProfile(p.copy(profileImageUri = file.absolutePath))
+            }
+        }
+    }
 
     Scaffold { padding ->
         Column(
@@ -50,7 +79,36 @@ fun ProfileScreen(viewModel: AppViewModel) {
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Shaxsiy ma'lumotlar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Profile Image
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                    .border(2.dp, MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape)
+                                    .clickable { imagePickerLauncher.launch("image/*") },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (profile?.profileImageUri != null) {
+                                    AsyncImage(
+                                        model = profile?.profileImageUri,
+                                        contentDescription = "Profil rasmi",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.Person,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(32.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Shaxsiy ma'lumotlar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
                         TextButton(onClick = { isEditingProfile = true }) { Text("Tahrirlash ✏️") }
                     }
                     Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
@@ -58,9 +116,20 @@ fun ProfileScreen(viewModel: AppViewModel) {
                         Text("Profil to'ldirilmagan. Iltimos, ma'lumotlarni kiriting! 🚀", color = MaterialTheme.colorScheme.error)
                     } else {
                         val p = profile!!
-                        ProfileRow("Ism-sharif", p.fullName)
-                        ProfileRow("Daraja", if (p.role == "teacher") "O'qituvchi 👨‍🏫" else if (p.role == "student") "Talaba 🎓" else "Boshqa 👤")
+                        ProfileRow("Ism familiya", p.fullName)
+                        ProfileRow("Rol", when(p.role) {
+                            "teacher" -> "O'qituvchi 👨‍🏫"
+                            "student" -> "Talaba 🎓"
+                            else -> "Umumiy foydalanuvchi 👤"
+                        })
                         ProfileRow("Muassasa", p.organization)
+                        if (p.role == "teacher" && !p.position.isNullOrBlank()) {
+                            ProfileRow("Lavozim", p.position)
+                        }
+                        if (p.role == "student") {
+                            if (!p.course.isNullOrBlank()) ProfileRow("Kurs", p.course)
+                            if (!p.groupName.isNullOrBlank()) ProfileRow("Guruh", p.groupName)
+                        }
                     }
                 }
             }
@@ -152,23 +221,78 @@ fun EditProfileDialog(currentProfile: Profile?, onDismiss: () -> Unit, onSave: (
     var fullName by remember { mutableStateOf(currentProfile?.fullName ?: "") }
     var role by remember { mutableStateOf(currentProfile?.role ?: "teacher") }
     var org by remember { mutableStateOf(currentProfile?.organization ?: "") }
+    var position by remember { mutableStateOf(currentProfile?.position ?: "") }
+    var course by remember { mutableStateOf(currentProfile?.course ?: "") }
+    var groupName by remember { mutableStateOf(currentProfile?.groupName ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Profilni Tahrirlash") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = { Text("Ism Familiya") })
-                Text("Rolni tanlang:")
-                Row {
-                    Button(onClick = { role = "teacher" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("O'qituvchi") }
-                    Button(onClick = { role = "student" }, modifier = Modifier.weight(1f).padding(2.dp)) { Text("Talaba") }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                OutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = { Text("Ism familiya") }, modifier = Modifier.fillMaxWidth())
+                
+                Text("Rolni tanlang:", fontWeight = FontWeight.Bold)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val roles = listOf("teacher" to "O'qituvchi", "student" to "Talaba", "general" to "Umumiy")
+                    roles.forEach { (id, label) ->
+                        FilterChip(
+                            selected = role == id,
+                            onClick = { role = id },
+                            label = { Text(label) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
-                OutlinedTextField(value = org, onValueChange = { org = it }, label = { Text("Muassasa") })
+
+                OutlinedTextField(value = org, onValueChange = { org = it }, label = { Text("Muassasa (Maktab/OTM)") }, modifier = Modifier.fillMaxWidth())
+
+                if (role == "teacher") {
+                    Text("Lavozimni kiriting:", fontWeight = FontWeight.Bold)
+                    OutlinedTextField(
+                        value = position, 
+                        onValueChange = { position = it }, 
+                        label = { Text("Masalan: Katta o'qituvchi, PhD...") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                if (role == "student") {
+                    Text("Kursni tanlang:", fontWeight = FontWeight.Bold)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        (1..5).forEach { c ->
+                            FilterChip(
+                                selected = course == "$c-kurs",
+                                onClick = { course = "$c-kurs" },
+                                label = { Text("$c") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = groupName, 
+                        onValueChange = { groupName = it }, 
+                        label = { Text("Guruh nomi va raqami") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         },
         confirmButton = {
-            Button(onClick = { onSave(Profile(fullName = fullName, role = role, organization = org)) }) { Text("Saqlash") }
+            Button(onClick = { 
+                onSave(Profile(
+                    fullName = fullName, 
+                    role = role, 
+                    organization = org,
+                    position = if (role == "teacher") position else null,
+                    course = if (role == "student") course else null,
+                    groupName = if (role == "student") groupName else null,
+                    profileImageUri = currentProfile?.profileImageUri // Preserve existing image
+                )) 
+            }) { Text("Saqlash") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Bekor qilish") }

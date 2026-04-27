@@ -21,8 +21,12 @@ import kotlinx.coroutines.flow.Flow
 data class Profile(
     @PrimaryKey val id: Int = 1, // Only one profile needed
     val fullName: String,
-    val role: String, // "teacher", "student", "other"
-    val organization: String
+    val role: String, // "teacher", "student", "general"
+    val organization: String,
+    val position: String? = null,
+    val course: String? = null,
+    val groupName: String? = null,
+    val profileImageUri: String? = null
 )
 
 @Entity(tableName = "settings")
@@ -158,7 +162,7 @@ interface ReminderDao {
 
 @Database(
     entities = [Profile::class, Settings::class, Lesson::class, Task::class, CustomReminder::class],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
