@@ -218,6 +218,7 @@ fun ContactRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: Str
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileDialog(currentProfile: Profile?, onDismiss: () -> Unit, onSave: (Profile) -> Unit) {
     var fullName by remember { mutableStateOf(currentProfile?.fullName ?: "") }
