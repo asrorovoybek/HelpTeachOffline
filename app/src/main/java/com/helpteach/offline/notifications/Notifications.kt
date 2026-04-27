@@ -34,6 +34,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val fallbackAudioResId = when (action) {
             "ACTION_LESSON_REMINDER" -> com.helpteach.offline.R.raw.lesson_reminder
             "ACTION_LESSON_STARTED" -> com.helpteach.offline.R.raw.lesson_started
+            "ACTION_LESSON_ENDED" -> com.helpteach.offline.R.raw.lesson_ended
             "ACTION_CUSTOM_REMINDER" -> com.helpteach.offline.R.raw.task_reminder
             "ACTION_MORNING_SUMMARY" -> com.helpteach.offline.R.raw.morning_summary
             "ACTION_EVENING_SUMMARY" -> com.helpteach.offline.R.raw.evening_summary
@@ -44,6 +45,7 @@ class AlarmReceiver : BroadcastReceiver() {
         when (action) {
             "ACTION_LESSON_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
             "ACTION_LESSON_STARTED" -> NotificationHelper.showNotification(context, id, title, message)
+            "ACTION_LESSON_ENDED" -> NotificationHelper.showNotification(context, id, title, message)
             "ACTION_MORNING_SUMMARY" -> handleMorningSummary(context)
             "ACTION_EVENING_SUMMARY" -> handleEveningSummary(context)
             "ACTION_CUSTOM_REMINDER" -> NotificationHelper.showNotification(context, id, title, message)
@@ -54,8 +56,8 @@ class AlarmReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 // Avval bazadan dars mavjudligini va hafta turiga mosligini tekshiramiz
-                if (action == "ACTION_LESSON_REMINDER" || action == "ACTION_LESSON_STARTED") {
-                    val lessonId = id / 100
+                if (action == "ACTION_LESSON_REMINDER" || action == "ACTION_LESSON_STARTED" || action == "ACTION_LESSON_ENDED") {
+                    val lessonId = id / 1000
                     val lesson = kotlinx.coroutines.withContext(Dispatchers.IO) {
                         AppDatabase.getDatabase(appContext).lessonDao().getLessonById(lessonId)
                     }
@@ -422,13 +424,22 @@ object NotificationHelper {
                 if (settings.notifyBefore30) {
                     setAlarm(context, lesson, hour, min, -30, "📅 30 daqiqadan dars boshlanadi!")
                 }
-                // 10 mins before
-                if (settings.notifyBefore10) {
-                    setAlarm(context, lesson, hour, min, -10, "⚡️ 10 daqiqa qoldi!")
+                // 20 mins before
+                if (settings.notifyBefore20) {
+                    setAlarm(context, lesson, hour, min, -20, "⚡️ 20 daqiqa qoldi!")
                 }
                 // On time
                 if (settings.notifyOnTime) {
                     setAlarm(context, lesson, hour, min, 0, "🔴 DARS BOSHLANDI!", "ACTION_LESSON_STARTED")
+                }
+                // On end
+                if (settings.notifyOnEnd) {
+                    val endParts = lesson.endTime.split(":")
+                    if (endParts.size == 2) {
+                        val endHour = endParts[0].toIntOrNull() ?: 0
+                        val endMin = endParts[1].toIntOrNull() ?: 0
+                        setAlarm(context, lesson, endHour, endMin, 0, "🏁 Dars tugadi!", "ACTION_LESSON_ENDED")
+                    }
                 }
             }
         }
@@ -444,9 +455,14 @@ object NotificationHelper {
         
         if (cal.before(Calendar.getInstance())) return // already passed today
 
+        val alarmId = when(actionType) {
+            "ACTION_LESSON_ENDED" -> lesson.id * 1000 + 999
+            else -> lesson.id * 1000 + Math.abs(offsetMins)
+        }
+
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = actionType
-            putExtra("id", lesson.id * 100 + Math.abs(offsetMins))
+            putExtra("id", alarmId)
             putExtra("title", title)
             putExtra("message", "📚 Fan: ${lesson.subject}\n🏛 Xona: ${lesson.room}\n👥 Guruh: ${lesson.groupName}")
             if (actionType == "ACTION_LESSON_REMINDER" && !lesson.customAudioUri.isNullOrBlank()) {
@@ -454,7 +470,7 @@ object NotificationHelper {
             }
         }
         val pendingIntent = PendingIntent.getBroadcast(
-            context, lesson.id * 100 + Math.abs(offsetMins), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            context, alarmId, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         setAlarmClockHelper(context, alarmManager, cal.timeInMillis, pendingIntent)

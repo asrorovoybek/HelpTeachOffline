@@ -31,8 +31,9 @@ data class Settings(
     val morningTime: String = "07:00",
     val eveningTime: String = "21:00",
     val notifyBefore30: Boolean = true,
-    val notifyBefore10: Boolean = true,
+    val notifyBefore20: Boolean = true,
     val notifyOnTime: Boolean = true,
+    val notifyOnEnd: Boolean = true,
     val doNotDisturb: Boolean = false,
     val weatherCity: String = "Qarshi",
     val baseWeekIsOdd: Boolean = true,
@@ -157,7 +158,7 @@ interface ReminderDao {
 
 @Database(
     entities = [Profile::class, Settings::class, Lesson::class, Task::class, CustomReminder::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

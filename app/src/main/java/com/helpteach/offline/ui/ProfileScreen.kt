@@ -86,8 +86,9 @@ fun ProfileScreen(viewModel: AppViewModel) {
                         ProfileRow("🌙 Kechki xulosa", s.eveningTime)
                         ProfileRow("🏙 Ob-havo shahri", s.weatherCity)
                         ProfileRow("⏰ 30 daqiqa oldin", if (s.notifyBefore30) "Yoqilgan ✅" else "O'chirilgan ❌")
-                        ProfileRow("⚡️ 10 daqiqa oldin", if (s.notifyBefore10) "Yoqilgan ✅" else "O'chirilgan ❌")
+                        ProfileRow("⚡️ 20 daqiqa oldin", if (s.notifyBefore20) "Yoqilgan ✅" else "O'chirilgan ❌")
                         ProfileRow("🔴 Dars vaqtida", if (s.notifyOnTime) "Yoqilgan ✅" else "O'chirilgan ❌")
+                        ProfileRow("🏁 Dars tugaganda", if (s.notifyOnEnd) "Yoqilgan ✅" else "O'chirilgan ❌")
                         ProfileRow("🔕 Bezovta qilma", if (s.doNotDisturb) "Faol 🔕" else "O'chirilgan 🔔")
                     }
                 }
@@ -182,8 +183,9 @@ fun EditSettingsDialog(currentSettings: Settings, onDismiss: () -> Unit, onSave:
     var weatherCity by remember { mutableStateOf(currentSettings.weatherCity) }
     
     var notify30 by remember { mutableStateOf(currentSettings.notifyBefore30) }
-    var notify10 by remember { mutableStateOf(currentSettings.notifyBefore10) }
+    var notify20 by remember { mutableStateOf(currentSettings.notifyBefore20) }
     var notify0 by remember { mutableStateOf(currentSettings.notifyOnTime) }
+    var notifyEnd by remember { mutableStateOf(currentSettings.notifyOnEnd) }
     var dnd by remember { mutableStateOf(currentSettings.doNotDisturb) }
 
     AlertDialog(
@@ -203,12 +205,16 @@ fun EditSettingsDialog(currentSettings: Settings, onDismiss: () -> Unit, onSave:
                     Text("30 daqiqa oldin eslatish")
                 }
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Checkbox(checked = notify10, onCheckedChange = { notify10 = it })
-                    Text("10 daqiqa oldin eslatish")
+                    Checkbox(checked = notify20, onCheckedChange = { notify20 = it })
+                    Text("20 daqiqa oldin eslatish")
                 }
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Checkbox(checked = notify0, onCheckedChange = { notify0 = it })
                     Text("Dars boshlanganda eslatish")
+                }
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Checkbox(checked = notifyEnd, onCheckedChange = { notifyEnd = it })
+                    Text("Dars tugaganda eslatish")
                 }
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Switch(checked = dnd, onCheckedChange = { dnd = it })
@@ -225,8 +231,9 @@ fun EditSettingsDialog(currentSettings: Settings, onDismiss: () -> Unit, onSave:
                         eveningTime = eveningTime,
                         weatherCity = weatherCity,
                         notifyBefore30 = notify30,
-                        notifyBefore10 = notify10,
+                        notifyBefore20 = notify20,
                         notifyOnTime = notify0,
+                        notifyOnEnd = notifyEnd,
                         doNotDisturb = dnd
                     )
                 )

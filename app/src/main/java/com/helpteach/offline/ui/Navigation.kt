@@ -270,7 +270,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
                     title = "1. Sozlamalar (birinchi qadam)",
                     content = "Profil \u2192 Sozlamalar \u2192 O'zgartirish tugmasini bosing. " +
                             "Ertalabki va kechki eslatma vaqtini kiriting. " +
-                            "Kerakli eslatma turlarini yoqing (30 daqiqa oldin, 10 daqiqa oldin, dars boshlanishi). " +
+                            "Kerakli eslatma turlarini yoqing (30 daqiqa oldin, 20 daqiqa oldin, dars boshlanishi va tugashi). " +
                             "\"Saqlash\" tugmasini bosing. Sozlamalar saqlanmaguncha eslatmalar ishlamaydi."
                 )
 
