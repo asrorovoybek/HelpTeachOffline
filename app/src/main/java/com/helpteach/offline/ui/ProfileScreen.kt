@@ -23,6 +23,8 @@ import com.helpteach.offline.data.Settings
 import com.helpteach.offline.viewmodel.AppViewModel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.Person
 import coil.compose.AsyncImage
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
