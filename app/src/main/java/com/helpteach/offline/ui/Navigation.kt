@@ -285,6 +285,7 @@ fun HelpDialog(onDismiss: () -> Unit) {
                     content = "Jadval menyusiga o'ting. Hafta kunini tanlang. " +
                             "\"+\" tugmasini bosib yangi dars qo'shing. " +
                             "Ixtiyoriy ravishda dars yoki vazifa uchun qo'shiq/audio biriktirishingiz mumkin. " +
+                            "Eslatma vaqtida uzun musiqalar ham maksimal 30 soniya chalinadi (optimal vaqt). " +
                             "Darsni o'chirish uchun dars kartochkasini bosing, bunda unga biriktirilgan audio ham xotiradan tozalanadi."
                 )
 
@@ -305,18 +306,17 @@ fun HelpDialog(onDismiss: () -> Unit) {
 
                 HelpSection(
                     title = "6. Oflayn eslatmalar va Ovozlar",
-                    content = "Ilova to'liq oflayn, internetdan xoli ishlaydi. " +
-                            "Eslatmalar eng baland (budilnik) rejimida chalinadi. " +
-                            "Agar darsga audio biriktirmagan bo'lsangiz, ilova o'zining standart ishonchli ovozida xabar beradi. " +
-                            "Telefon o'chib yonsa ham barcha budilniklar o'z o'rniga tiklanadi!"
+                    content = "Ilova to'liq oflayn ishlaydi. Eslatmalar budilnik rejimida chalinadi. " +
+                            "Agar video ko'rayotgan bo'lsangiz, ilova uni avtomatik pasaytirib, o'z xabarini to'liq eshittiradi. " +
+                            "Shaxsiy audiolarni 30 soniyadan so'ng avtomatik to'xtatadi. " +
+                            "Telefon o'chib yonsa ham barcha eslatmalar o'z o'rniga tiklanadi!"
                 )
 
                 HelpSection(
                     title = "7. Bugungi reja (Hafta turi)",
                     content = "Bugun menyusida kunlik reja ko'rsatiladi. " +
-                            "Yuqori burchakda turgan 'Toq hafta' yoki 'Juft hafta' yozuvi ustiga bossangiz, " +
-                            "hafta turini o'zingizning o'qish jadvalingizga moslab o'zgartirishingiz mumkin. " +
-                            "Ilova qolganini shu asosda avtomatik hisoblab ketaveradi!"
+                            "Yuqori burchakdagi 'Toq/Juft hafta' yozuvini bosib haftani o'zgartirish mumkin. " +
+                            "Ilova dars vaqtida haftani qayta tekshiradi va faqat kerakli haftadagi darslarni aytadi."
                 )
             }
         },

@@ -127,10 +127,27 @@ class AlarmReceiver : BroadcastReceiver() {
                         mediaPlayer.setAudioAttributes(audioAttributes)
                         mediaPlayer.setDataSource(customAudioFile.absolutePath)
                         mediaPlayer.prepare()
+
+                        // Maksimal 30 soniya chalish (uzun musiqalar to'xtatiladi)
+                        val timeoutJob = launch {
+                            delay(30000)
+                            try {
+                                if (mediaPlayer.isPlaying) {
+                                    mediaPlayer.stop()
+                                    mediaPlayer.release()
+                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                                        audioManager.abandonAudioFocus(null)
+                                    }
+                                    pendingResult.finish()
+                                }
+                            } catch (e: Exception) {}
+                        }
+
                         mediaPlayer.setOnCompletionListener { mp ->
+                            timeoutJob.cancel()
                             mp.release()
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                // Abandon focus logic is complex for O+, but transient focus usually handles itself
+                                // Focus handles itself
                             } else {
                                 audioManager.abandonAudioFocus(null)
                             }
@@ -152,7 +169,24 @@ class AlarmReceiver : BroadcastReceiver() {
                             mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                             afd.close()
                             mediaPlayer.prepare()
+
+                            // Maksimal 30 soniya (standart ovozlar uchun ham)
+                            val timeoutJob = launch {
+                                delay(30000)
+                                try {
+                                    if (mediaPlayer.isPlaying) {
+                                        mediaPlayer.stop()
+                                        mediaPlayer.release()
+                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                                            audioManager.abandonAudioFocus(null)
+                                        }
+                                        pendingResult.finish()
+                                    }
+                                } catch (e: Exception) {}
+                            }
+
                             mediaPlayer.setOnCompletionListener { mp ->
+                                timeoutJob.cancel()
                                 mp.release()
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     // Focus handles itself
