@@ -230,7 +230,7 @@ fun EditProfileDialog(currentProfile: Profile?, onDismiss: () -> Unit, onSave: (
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Profilni Tahrirlash") },
+        title = { Text("Profilni tahrirlash") },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -239,28 +239,43 @@ fun EditProfileDialog(currentProfile: Profile?, onDismiss: () -> Unit, onSave: (
                 OutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = { Text("Ism familiya") }, modifier = Modifier.fillMaxWidth())
                 
                 Text("Rolni tanlang:", fontWeight = FontWeight.Bold)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val roles = listOf("teacher" to "O'qituvchi", "student" to "Talaba", "general" to "Umumiy")
                     roles.forEach { (id, label) ->
-                        FilterChip(
-                            selected = role == id,
+                        Surface(
                             onClick = { role = id },
-                            label = { Text(label) },
-                            modifier = Modifier.weight(1f)
-                        )
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (role == id) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.weight(1f).height(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(label, style = MaterialTheme.typography.labelLarge, color = if (role == id) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
 
                 OutlinedTextField(value = org, onValueChange = { org = it }, label = { Text("Muassasa (Maktab/OTM)") }, modifier = Modifier.fillMaxWidth())
 
                 if (role == "teacher") {
-                    Text("Lavozimni kiriting:", fontWeight = FontWeight.Bold)
-                    OutlinedTextField(
-                        value = position, 
-                        onValueChange = { position = it }, 
-                        label = { Text("Masalan: Katta o'qituvchi, PhD...") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Text("Lavozimni tanlang:", fontWeight = FontWeight.Bold)
+                    val positions = listOf("Stajyor", "Assistent", "Katta o'qituvchi", "Dotsent", "PhD", "DSc", "Professor")
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        val rows = positions.chunked(3)
+                        rows.forEach { row ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                row.forEach { pos ->
+                                    FilterChip(
+                                        selected = position == pos,
+                                        onClick = { position = pos },
+                                        label = { Text(pos, style = MaterialTheme.typography.labelSmall) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                if (row.size < 3) Spacer(Modifier.weight(3f - row.size))
+                            }
+                        }
+                    }
                 }
 
                 if (role == "student") {
