@@ -224,11 +224,11 @@ class AlarmReceiver : BroadcastReceiver() {
             val weekNumber = cal.get(Calendar.WEEK_OF_YEAR)
             val isOddWeek = weekNumber % 2 != 0
 
-            val lessons = db.lessonDao().getLessonsByDay(dayOfWeek).firstOrNull() ?: emptyList()
+            val lessons = db.lessonDao().getLessonsByDaySync(dayOfWeek)
             val validLessons = lessons.filter { l ->
                 l.weekType == "every" || (l.weekType == "odd" && isOddWeek) || (l.weekType == "even" && !isOddWeek)
             }
-            val pendingTasks = db.taskDao().getPendingTasks().firstOrNull() ?: emptyList()
+            val pendingTasks = db.taskDao().getPendingTasksSync()
 
             val msg = buildString {
                 if (validLessons.isNotEmpty()) {
@@ -252,8 +252,8 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun handleEveningSummary(context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
             val db = AppDatabase.getDatabase(context)
-            val pendingTasks = db.taskDao().getPendingTasks().firstOrNull() ?: emptyList()
-            val completedTasks = db.taskDao().getCompletedTasks().firstOrNull() ?: emptyList()
+            val pendingTasks = db.taskDao().getPendingTasksSync()
+            val completedTasks = db.taskDao().getCompletedTasksSync()
 
             val msg = buildString {
                 append("✅ Bajarilgan vazifalar: ${completedTasks.size} ta\n")
@@ -323,7 +323,7 @@ object NotificationHelper {
             if (settings.doNotDisturb) return@launch
 
             val timeStr = if (type == "morning") settings.morningTime else settings.eveningTime
-            val parts = timeStr.split(":")
+            val parts = timeStr.trim().split(":")
             if (parts.size != 2) return@launch
             
             val hour = parts[0].toIntOrNull() ?: return@launch
@@ -338,10 +338,11 @@ object NotificationHelper {
                 }
             }
 
+            val reqCode = if (type == "morning") 8881 else 8882
             val intent = Intent(context, AlarmReceiver::class.java).apply {
                 action = if (type == "morning") "ACTION_MORNING_SUMMARY" else "ACTION_EVENING_SUMMARY"
+                putExtra("id", reqCode)
             }
-            val reqCode = if (type == "morning") 8881 else 8882
             val pendingIntent = PendingIntent.getBroadcast(
                 context, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )

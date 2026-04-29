@@ -116,6 +116,9 @@ interface LessonDao {
     @Query("SELECT * FROM lessons WHERE dayOfWeek = :day ORDER BY startTime")
     fun getLessonsByDay(day: Int): Flow<List<Lesson>>
 
+    @Query("SELECT * FROM lessons WHERE dayOfWeek = :day ORDER BY startTime")
+    suspend fun getLessonsByDaySync(day: Int): List<Lesson>
+
     @Query("SELECT * FROM lessons WHERE id = :id LIMIT 1")
     suspend fun getLessonById(id: Int): Lesson?
 
@@ -131,8 +134,14 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE isDone = 0 ORDER BY dueDate ASC")
     fun getPendingTasks(): Flow<List<Task>>
 
+    @Query("SELECT * FROM tasks WHERE isDone = 0 ORDER BY dueDate ASC")
+    suspend fun getPendingTasksSync(): List<Task>
+
     @Query("SELECT * FROM tasks WHERE isDone = 1")
     fun getCompletedTasks(): Flow<List<Task>>
+
+    @Query("SELECT * FROM tasks WHERE isDone = 1")
+    suspend fun getCompletedTasksSync(): List<Task>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: Task)
